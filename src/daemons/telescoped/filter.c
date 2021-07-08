@@ -26,7 +26,6 @@
 #include "csimc.h"
 #include "virmc.h"
 #include "cliserv.h"
-#include "tts.h"
 
 #include "teled.h"
 
@@ -208,8 +207,6 @@ filter_home(int first, ...)
 	    active_func = NULL;
 	    fifoWrite (Filter_Id, 1, "Homing complete. Now going to %s.",
 							filinfo[deffilt].name);
-	    toTTS ("The filter wheel has found home and is now going to the %s position.",
-							filinfo[deffilt].name);
 	    filter_set (1, filinfo[deffilt].name);
 	    break;
 	}
@@ -246,7 +243,6 @@ filter_limits(int first, ...)
 	    active_func = NULL;
 	    initCfg();		/* read new limits */
 	    fifoWrite (Filter_Id, 0, "Limits found");
-	    toTTS ("The filter wheel has found both limit positions.");
 	    break;
 	}
 }
@@ -307,7 +303,6 @@ filter_set(int first, ...)
 		    active_func = NULL;
 		    stopFilter(1);
 		    fifoWrite (Filter_Id, -1, "Filter error: %s", buf);
-	    	toTTS ("Filter error: %s", buf);
             return;
 		}	
 
@@ -337,7 +332,6 @@ filter_set(int first, ...)
 			active_func = NULL;
 			stopFilter(1);
     		fifoWrite (Filter_Id, 0, "Filter is current");
-		    toTTS ("Using the current filter wheel position.");
 			return; // already selected -- we're done!
 		}
 
@@ -373,7 +367,6 @@ filter_set(int first, ...)
 	    	mip->cvel = mip->sign*mip->maxvel;
 		    mip->dpos = goal;
 		    active_func = filter_set;
-	    	toTTS ("The filter wheel is rotating to the %s position.", fip->name);
 		}
 	}
 
@@ -384,7 +377,6 @@ filter_set(int first, ...)
     	/* check for timeout */
         if(mjd > script_to) {
             fifoWrite (Filter_Id, -5, "Filter Script timed out");
-            toTTS ("Filter setting has timed out.");
             stopFilter(1);
             active_func = NULL;
 			readFilter();
@@ -409,7 +401,6 @@ filter_set(int first, ...)
 		    active_func = NULL;
 		    stopFilter(1);
 		    fifoWrite (Filter_Id, n, "Filter error: %s", buf+2); /* skip -n */
-	    	toTTS ("Filter error: %s", buf+2);
 			readFilter();
 			showFilter();
 	    	return;
@@ -440,7 +431,6 @@ filter_set(int first, ...)
 		active_func = NULL;
 		stopFilter(1);
     	fifoWrite (Filter_Id, 0, "Filter in place");
-	    toTTS ("The filter wheel is in position.");
 		readFilter();
 		showFilter();
 	}
@@ -453,7 +443,6 @@ filter_set(int first, ...)
 		    active_func = NULL;
 		    stopFilter(1);
 	    	fifoWrite (Filter_Id, 0, "Filter in place");
-		    toTTS ("The filter wheel is in position.");
 		}
 	}
 }

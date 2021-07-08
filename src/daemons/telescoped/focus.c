@@ -24,7 +24,6 @@
 #include "virmc.h"
 #include "telenv.h"
 #include "cliserv.h"
-#include "tts.h"
 
 #include "teled.h"
 
@@ -156,7 +155,6 @@ focus_home(int first, ...)
 
 	    /* new state */
 	    active_func = focus_home;
-	    toTTS ("The focus motor is seeking the home position.");
 	}
 
 	switch (axis_home (mip, Focus_Id, 0)) {
@@ -169,7 +167,6 @@ focus_home(int first, ...)
 	case  0:
 	    active_func = NULL;
 	    fifoWrite (Focus_Id,1,"Homing complete.");
-	    toTTS ("The focus motor has found home.");
 	    readFocus();
 	    unow = mip->cpos*mip->step/(2*PI*mip->focscale);
 	    mip->cvel = 0;
@@ -196,7 +193,6 @@ focus_limits(int first, ...)
 
 	    /* new state */
 	    active_func = focus_limits;
-	    toTTS ("The focus motor is seeking both limit positions.");
 	}
 
 	switch (axis_limits (mip, Focus_Id, 0)) {
@@ -211,7 +207,6 @@ focus_limits(int first, ...)
 	    active_func = NULL;
 	    initCfg();		/* read new limits */
 	    fifoWrite (Focus_Id, 0, "Limits found");
-	    toTTS ("The focus motor has found both limit positions.");
 	    break;
 	}
 }
@@ -266,7 +261,6 @@ focus_offset(int first, ...)
 		    active_func = NULL;
 		    stopFocus(0);
 		    fifoWrite (Focus_Id, -1, "Focus error: %s", buf);
-	    	toTTS ("Focus error: %s", buf);
             return;
 		}	
 	
@@ -305,7 +299,6 @@ focus_offset(int first, ...)
 	    active_func = NULL;
 	    stopFocus(0);
 	    fifoWrite (Focus_Id, 0, "Focus offset complete");
-	    toTTS ("The focus motor is in position.");
 	}
 }
 	

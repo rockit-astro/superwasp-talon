@@ -28,7 +28,6 @@
 #include "csimc.h"
 #include "virmc.h"
 #include "cliserv.h"
-#include "tts.h"
 
 #include "teled.h"
 
@@ -240,7 +239,6 @@ dome_open (int first, ...)
 		}		
 	    SS = SH_OPENING;
 	    fifoWrite (Dome_Id, 2, "Starting open");
-	    toTTS ("The %s is now opening.", doorType());
 	    active_func = dome_open;
 	    return;
 	}
@@ -248,7 +246,6 @@ dome_open (int first, ...)
 	/* check for time out */
 	if (mjd > dome_to) {
 	    fifoWrite (Dome_Id, -5, "Open timed out");
-	    toTTS ("Opening of %s timed out.", doorType());
 	    d_stop();
 	    SS = SH_IDLE;
 	    active_func = NULL;
@@ -287,7 +284,6 @@ dome_open (int first, ...)
 	      telstatshmp->domealarm = 0;
 
 	    fifoWrite (Dome_Id, n, "Open error: %s", buf+2); /* skip -n */
-	    toTTS ("Error opening %s: %s", doorType(), buf+2);
 	    SS = SH_IDLE;
 	    active_func = NULL;
             dome_stop(1);
@@ -295,14 +291,12 @@ dome_open (int first, ...)
 	}
 	if (n > 0) {
 	    fifoWrite (Dome_Id, n, "%s", buf+1); /* skip n */
-	    toTTS ("Progress of %s: %s", doorType(), buf+1);
 	    telstatshmp->domealarm = 0;
 	    return;
 	}
 
 	/* ok! */
 	fifoWrite (Dome_Id, 0, "Open complete");
-	toTTS ("The %s is now open.", doorType());
 	telstatshmp->domealarm = 0;
 	SS = SH_OPEN;
 	active_func = NULL;
@@ -337,7 +331,6 @@ dome_close (int first, ...)
 	    }
 	    SS = SH_CLOSING;
 	    fifoWrite (Dome_Id, 2, "Starting close");
-	    toTTS ("The %s is now closing.",doorType());
 	    active_func = dome_close;
 	    return;
 	}
@@ -345,7 +338,6 @@ dome_close (int first, ...)
 	/* check for time out */
 	if (mjd > dome_to) {
 	    fifoWrite (Dome_Id, -5, "Close timed out");
-	    toTTS ("Closing of %s timed out.", doorType());
 	    d_stop();
 	    SS = SH_IDLE;
 	    active_func = NULL;
@@ -383,7 +375,6 @@ dome_close (int first, ...)
 	      telstatshmp->domealarm = 0;
 
 	    fifoWrite (Dome_Id, n, "Close error: %s", buf+2); /* skip -n */
-	    toTTS ("Error closing %s: %s", doorType(), buf+2);
 	    SS = SH_IDLE;
 	    active_func = NULL;
             dome_stop(1);
@@ -391,14 +382,12 @@ dome_close (int first, ...)
 	}
 	if (n > 0) {
 	    fifoWrite (Dome_Id, n, "%s", buf+1); /* skip n */
-	    toTTS ("Progress of %s: %s", doorType(), buf+1);
 	    telstatshmp->domealarm = 0;
 	    return;
 	}
 
 	/* ok! */
 	fifoWrite (Dome_Id, 0, "Close complete");
-	toTTS ("The %s is now closed.", doorType());
 	telstatshmp->domealarm = 0;
 	SS = SH_CLOSED;
 	active_func = NULL;
@@ -423,7 +412,6 @@ dome_stop (int first, ...)
 
 	if (mjd > dome_to) {
 	    fifoWrite (Dome_Id, -5, "Stop timed out");
-	    toTTS ("Stop of %s timed out.",enclType());
 	    d_stop();	/* ?? */
 	    active_func = NULL;
 	    return;
@@ -431,7 +419,6 @@ dome_stop (int first, ...)
 		
 	active_func = NULL;
 	fifoWrite (Dome_Id, 0, "Stop complete");
-	toTTS ("The %s is now stopped.",enclType());
 }
 
 /* find dome home */
@@ -451,7 +438,6 @@ static void dome_alarmset (int first, int alon) {
 
     /* ok! */
     fifoWrite (Dome_Id, 0, "%s alarm complete", alon ? "Set" : "Reset");
-    toTTS ("The alarm is now %s", alon ? "on" : "off");
 
     telstatshmp->domealarm = alon;
   }
