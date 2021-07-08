@@ -138,7 +138,6 @@ noPos ()
 	wtprintf (g_w[PCHA_W], blank);
 	wtprintf (g_w[PCALT_W], blank);
 	wtprintf (g_w[PCAZ_W], blank);
-	wtprintf (g_w[PCDAZ_W], blank);
 }
 
 static void
@@ -429,32 +428,6 @@ showDome()
 	setLt (g_w[DCLT_W], scl);
 
 	XmToggleButtonSetState (g_w[DAUTO_W], telstatshmp->autodome, False);
-
-	if (ds != DS_ABSENT) {
-	    char buf[128];
-	    double tmp;
-
-	    if (ds != DS_HOMING) {
-		fs_sexa (buf, raddeg(telstatshmp->domeaz), 4, 3600);
-		wtprintf (g_w[PCDAZ_W], "%s", buf);
-		if (!XtIsSensitive (g_w[DAZ_W]))
-		    wtprintf (g_w[DAZ_W], "%.3s", buf);
-	    } else
-		wtprintf (g_w[PCDAZ_W], blank);
-
-	    if (telstatshmp->autodome || ds == DS_ROTATING || ds == DS_HOMING) {
-		fs_sexa (buf, raddeg(telstatshmp->dometaz), 4, 3600);
-		wtprintf (g_w[PTDAZ_W], "%s", buf);
-	    } else
-		wtprintf (g_w[PTDAZ_W], blank);
-
-	    if (telstatshmp->autodome || ds == DS_ROTATING) {
-		tmp = delra (telstatshmp->domeaz - telstatshmp->dometaz);
-		fs_sexa (buf, raddeg(tmp), 4, 3600);
-		wtprintf (g_w[PDDAZ_W], "%s", buf);
-	    } else
-		wtprintf (g_w[PDDAZ_W], blank);
-	}
 }
 
 /* For RCS Only -- Do Not Edit */

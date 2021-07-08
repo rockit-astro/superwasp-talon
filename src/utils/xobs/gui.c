@@ -96,11 +96,9 @@ static char prT[] = "prompt";
 static char pbT[] = "button";
 static char frT[] = "frame";
 
-#define	LOGODASZ	100	/* size of logo drawing area, pixels */
 static GC guigc;
-static Pixmap logopm;
-static XpmAttributes logoxpma;
 static Pixel tshadow_p, bshadow_p;
+
 
 static Widget msg_w;
 static int msg_txtl;
@@ -108,7 +106,6 @@ static int msg_txtl;
 #define	LIGHTW		10	/* width of light indicator */
 #define	LIGHTH		10	/* height of light indicator */
 
-static Widget mkLogo (Widget main_w);
 static Widget mkCurrent(Widget main_w);
 static Widget mkDome(Widget main_w);
 static Widget mkControl(Widget main_w);
@@ -141,7 +138,6 @@ mkGUI(char *version)
 	Widget main_w;
 	Widget cur_w;
 	Widget skymap_w;
-	Widget logo_w;
 	Widget ctrl_w;
 	Widget status_w;
 	Widget dome_w;
@@ -172,19 +168,12 @@ mkGUI(char *version)
 	    XmNleftAttachment, XmATTACH_FORM,
 	    NULL);
 
-	logo_w = mkLogo(main_w);
-	XtVaSetValues (logo_w,
-	    XmNtopAttachment, XmATTACH_FORM,
-	    XmNrightAttachment, XmATTACH_FORM,
-	    NULL);
-
 	cur_w = mkCurrent(main_w);
 	XtVaSetValues (cur_w,
 	    XmNtopAttachment, XmATTACH_FORM,
 	    XmNleftAttachment, XmATTACH_WIDGET,
 	    XmNleftWidget, skymap_w,
-	    XmNrightAttachment, XmATTACH_WIDGET,
-	    XmNrightWidget, logo_w,
+	    XmNrightAttachment, XmATTACH_FORM,
 	    NULL);
 
 	hf_w = XtVaCreateManagedWidget ("HF", xmFormWidgetClass, main_w,
@@ -412,51 +401,6 @@ guiSensitive (int whether)
 	/* dome sensitivity is left up to updateStatus() */
 }
 
-/* callback for the logo drawing area expose */
-static void
-logoExpCB (Widget w, XtPointer client, XtPointer call)
-{
-	XmDrawingAreaCallbackStruct *s = (XmDrawingAreaCallbackStruct *)call;
-	XExposeEvent *evp = &s->event->xexpose;
-	int logox = (LOGODASZ - logoxpma.width)/2;
-	int logoy = (LOGODASZ - logoxpma.height)/2;
-
-	if (!guigc)
-	    mkGC();
-
-	XCopyArea (evp->display, logopm, evp->window, guigc, evp->x - logox,
-		evp->y - logoy, evp->width, evp->height, evp->x, evp->y); 
-}
-
-static Widget
-mkLogo (Widget main_w)
-{
-	Display *dsp = XtDisplay(main_w);
-	Window root = RootWindow(dsp, 0);
-	char fn[1024];
-	Widget da_w;
-	Widget fr_w;
-	int xpms;
-
-	strcpy (fn, "archive/config/logo.xpm");
-	telfixpath (fn, fn);
-
-	fr_w = XtVaCreateManagedWidget ("LFr", xmFrameWidgetClass, main_w,
-	    NULL);
-
-	logoxpma.valuemask = 0;
-	xpms = XpmReadFileToPixmap(dsp, root, fn, &logopm, NULL, &logoxpma);
-
-	da_w = XtVaCreateManagedWidget ("LDA", xmDrawingAreaWidgetClass, fr_w,
-	    XmNwidth, LOGODASZ,
-	    XmNheight, LOGODASZ,
-	    NULL);
-	if (xpms == XpmSuccess)
-	    XtAddCallback(da_w, XmNexposeCallback, logoExpCB, NULL);
-	
-	return (fr_w);
-}
-
 static Widget
 mkCurrent(Widget main_w)
 {
@@ -470,7 +414,6 @@ mkCurrent(Widget main_w)
 	    {"HA"},
 	    {"Altitude"},
 	    {"Azimuth"},
-	    {"Dome Az"},
 	};
 	Widget fr_w, f_w;
 	Widget lf_w;
@@ -517,7 +460,6 @@ mkCurrent(Widget main_w)
 	g_w[PCHA_W] = l_w[3];
 	g_w[PCALT_W] = l_w[4];
 	g_w[PCAZ_W] = l_w[5];
-	g_w[PCDAZ_W] = l_w[6];
 
 	lf_w = XtVaCreateManagedWidget ("CCF", xmFormWidgetClass, f_w,
 	    XmNtopAttachment, XmATTACH_WIDGET,
@@ -545,7 +487,6 @@ mkCurrent(Widget main_w)
 	g_w[PTHA_W] = l_w[3];
 	g_w[PTALT_W] = l_w[4];
 	g_w[PTAZ_W] = l_w[5];
-	g_w[PTDAZ_W] = l_w[6];
 
 	lf_w = XtVaCreateManagedWidget ("CCF", xmFormWidgetClass, f_w,
 	    XmNtopAttachment, XmATTACH_WIDGET,
@@ -573,7 +514,6 @@ mkCurrent(Widget main_w)
 	g_w[PDHA_W] = l_w[3];
 	g_w[PDALT_W] = l_w[4];
 	g_w[PDAZ_W] = l_w[5];
-	g_w[PDDAZ_W] = l_w[6];
 
 	return (fr_w);
 }
@@ -1027,12 +967,15 @@ mkInfo(Widget main_w)
 	    Widget *wp;
 	    char *tip;
 	} Ctrl;
-	static Ctrl ctrls[] = {
+	static Ctrl ctrls1[] = {
 	    {"Local", &g_w[ILT_W], "Local Civil Time"},
 	    {"UT", &g_w[IUT_W], "Universal Time"},
 	    {"UT Date", &g_w[IUTD_W], "Universal Date"},
 	    {"LST", &g_w[ILST_W], "Local Sidereal Time"},
 	    {"JD", &g_w[IJD_W], "Julian Date"},
+	};
+
+	static Ctrl ctrls2[] = {
 	    {"Moon", &g_w[IMOON_W], "Moon phase, direction and altitude"},
 	    {"Sun", &g_w[ISUN_W], "Sun direction and altitude"},
 	    {"Dusk", &g_w[IDUSK_W], "UT end of twilight"},
@@ -1042,7 +985,8 @@ mkInfo(Widget main_w)
 	Widget fr_w, f_w;
 	Widget lf_w;
 	Widget sep_w;
-	Widget l_w[XtNumber(ctrls)];
+	Widget l_w1[XtNumber(ctrls1)];
+	Widget l_w2[XtNumber(ctrls2)];
 	int i;
 
 	sprintf (site, "Site Information at %s", BANNER);
@@ -1053,12 +997,12 @@ mkInfo(Widget main_w)
 	    XmNleftAttachment, XmATTACH_FORM,
 	    XmNrightAttachment, XmATTACH_FORM,
 	    NULL);
-	for (i = 0; i < XtNumber(l_w); i++) {
-	    l_w[i] = XtVaCreateManagedWidget ("IL", xmLabelWidgetClass, lf_w,
+	for (i = 0; i < XtNumber(l_w1); i++) {
+	    l_w1[i] = XtVaCreateManagedWidget ("IL", xmLabelWidgetClass, lf_w,
 		NULL);
-	    wltprintf (prT, l_w[i], "%s", ctrls[i].lbl);
+	    wltprintf (prT, l_w1[i], "%s", ctrls1[i].lbl);
 	}
-	mkRow (lf_w, l_w, XtNumber(l_w), 25);
+	mkRow (lf_w, l_w1, XtNumber(l_w1), 25);
 
 	lf_w = XtVaCreateManagedWidget ("ILF", xmFormWidgetClass, f_w,
 	    XmNtopAttachment, XmATTACH_WIDGET,
@@ -1066,8 +1010,8 @@ mkInfo(Widget main_w)
 	    XmNleftAttachment, XmATTACH_FORM,
 	    XmNrightAttachment, XmATTACH_FORM,
 	    NULL);
-	for (i = 0; i < XtNumber(l_w); i++) {
-	    l_w[i] = XtVaCreateManagedWidget ("IL", xmTextFieldWidgetClass,lf_w,
+	for (i = 0; i < XtNumber(l_w1); i++) {
+	    l_w1[i] = XtVaCreateManagedWidget ("IL", xmTextFieldWidgetClass,lf_w,
 		XmNbackground, uneditableColor,
 		XmNcolumns, 8,
 		XmNcursorPositionVisible, False,
@@ -1075,12 +1019,12 @@ mkInfo(Widget main_w)
 		XmNmarginHeight, 1,
 		XmNmarginWidth, 1,
 		NULL);
-	    if (ctrls[i].wp)
-		*ctrls[i].wp = l_w[i];
-	    if (ctrls[i].tip)
-		wtip (l_w[i], ctrls[i].tip);
+	    if (ctrls1[i].wp)
+		*ctrls1[i].wp = l_w1[i];
+	    if (ctrls1[i].tip)
+		wtip (l_w1[i], ctrls1[i].tip);
 	}
-	mkRow (lf_w, l_w, XtNumber(l_w), 25);
+	mkRow (lf_w, l_w1, XtNumber(l_w1), 25);
 
 	sep_w = XtVaCreateManagedWidget ("S", xmSeparatorWidgetClass, f_w,
 	    XmNtopAttachment, XmATTACH_WIDGET,
@@ -1089,6 +1033,40 @@ mkInfo(Widget main_w)
 	    XmNleftAttachment, XmATTACH_FORM,
 	    XmNrightAttachment, XmATTACH_FORM,
 	    NULL);
+
+	lf_w = XtVaCreateManagedWidget ("ILF", xmFormWidgetClass, f_w,
+	    XmNtopAttachment, XmATTACH_FORM,
+	    XmNleftAttachment, XmATTACH_FORM,
+	    XmNrightAttachment, XmATTACH_FORM,
+	    NULL);
+	for (i = 0; i < XtNumber(l_w2); i++) {
+	    l_w2[i] = XtVaCreateManagedWidget ("IL", xmLabelWidgetClass, lf_w,
+		NULL);
+	    wltprintf (prT, l_w2[i], "%s", ctrls2[i].lbl);
+	}
+	mkRow (lf_w, l_w2, XtNumber(l_w2), 25);
+
+	lf_w = XtVaCreateManagedWidget ("ILF", xmFormWidgetClass, f_w,
+	    XmNtopAttachment, XmATTACH_WIDGET,
+	    XmNtopWidget, lf_w,
+	    XmNleftAttachment, XmATTACH_FORM,
+	    XmNrightAttachment, XmATTACH_FORM,
+	    NULL);
+	for (i = 0; i < XtNumber(l_w2); i++) {
+	    l_w2[i] = XtVaCreateManagedWidget ("IL", xmTextFieldWidgetClass,lf_w,
+		XmNbackground, uneditableColor,
+		XmNcolumns, 8,
+		XmNcursorPositionVisible, False,
+		XmNeditable, False,
+		XmNmarginHeight, 1,
+		XmNmarginWidth, 1,
+		NULL);
+	    if (ctrls2[i].wp)
+		*ctrls2[i].wp = l_w2[i];
+	    if (ctrls2[i].tip)
+		wtip (l_w2[i], ctrls2[i].tip);
+	}
+	mkRow (lf_w, l_w2, XtNumber(l_w2), 25);
 
 	return (fr_w);
 }
