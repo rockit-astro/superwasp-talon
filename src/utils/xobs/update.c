@@ -61,9 +61,6 @@ updateStatus(int force)
 	DShState ss = telstatshmp->shutterstate;
 	int busy;
 
-	/* do once per swing through */
-	soundIsOn();
-
 	/* always do these at least occasionally */
 	if (doslow) {
 	    computeSunMoon();

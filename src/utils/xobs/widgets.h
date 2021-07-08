@@ -28,7 +28,6 @@ typedef enum {
     CCALIBA_W,
     CPADDLE_W,
     CCNFOFF_W,
-    CSOUND_W,
 
     /* status */
     STLT_W,

@@ -235,18 +235,6 @@ int docommand (struct cliclient *c, unsigned char cmd, int paylen,
 	  current_tel_cmd = cmd;
 	}
       }
-      else if(!strcasecmp(objname, "domeflat")) {
-	if(fifoMsg(Tel_Id, "Alt:%.5f Az:%.6f", FLATTALT, FLATTAZ) == -1) {
-	  cmd_err(errbuf, "telescope not available");
-	  rv = TCSRET_FAILED;
-	}
-	else {
-	  msg("CLI: Slewing telescope to dome flat position");
-	  
-	  rv = TCSRET_ACK;
-	  current_tel_cmd = cmd;
-	}
-      }
       else {
 	/* lookup object */
 	Now *np = &telstatshmp->now;
@@ -384,11 +372,6 @@ int docommand (struct cliclient *c, unsigned char cmd, int paylen,
 	      !strcasecmp(objname, "service")) {
 	alt = M_PI / 2;
 	az = 0.0;
-	altaz = 1;
-      }
-      else if(!strcasecmp(objname, "domeflat")) {
-	alt = FLATTALT;
-	az = FLATTAZ;
 	altaz = 1;
       }
       else {

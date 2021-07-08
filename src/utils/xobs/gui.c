@@ -394,7 +394,6 @@ guiSensitive (int whether)
 	/* these are only ever sensitive if we are alone */
 	if (!xobs_alone) {
 	    XtSetSensitive (g_w[CSTOP_W], 0);
-	    XtSetSensitive (g_w[CSOUND_W], 0);
 	}
 
 	/* dome sensitivity is left up to updateStatus() */
@@ -588,8 +587,6 @@ mkControl(Widget main_w)
 	    	"Toggle whether to confirm actions first"},
 	    {"Paddle",      0, g_paddle, &g_w[CPADDLE_W],
 	    	"Toggle a tool to directly command telescope motions"}, 
-	    {"Sounds",      1, soundCB,  &g_w[CSOUND_W],
-	    	"Toggle whether to make sounds while equipment is setting up"},
 	};
 	Widget fr_w, f_w;
 	Widget tbl_w;
