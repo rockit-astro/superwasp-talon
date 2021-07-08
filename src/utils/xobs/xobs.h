@@ -26,13 +26,6 @@ extern Obj sunobj, moonobj;
 extern int xobs_alone;
 extern void die (void);
 
-/* batch.c */
-extern int batchIsOn(void);
-extern void batchOn(void);
-extern void batchOff(void);
-extern void batchUpdate();
-extern void batchCB (Widget w, XtPointer client, XtPointer call);
-
 /* calaxes.c */
 extern void axes_manage (void);
 extern int axes_xephemSet (char *buf);

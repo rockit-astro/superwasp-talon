@@ -25,7 +25,6 @@
 #include "telenv.h"
 #include "cliserv.h"
 #include "tts.h"
-#include "focustemp.h"
 
 #include "teled.h"
 
@@ -457,9 +456,6 @@ initCfg()
 	mip->neglim = ONEGLIM;
 
 	mip->focscale = OSCALE;
-	
-	// Read in the focus position table
-	focusPositionReadData();
 
 #undef NOCFG
 #undef NHCFG

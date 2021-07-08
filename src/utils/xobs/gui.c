@@ -394,7 +394,6 @@ guiSensitive (int whether)
 	/* these are only ever sensitive if we are alone */
 	if (!xobs_alone) {
 	    XtSetSensitive (g_w[CSTOP_W], 0);
-	    XtSetSensitive (g_w[CBATCH_W], 0);
 	    XtSetSensitive (g_w[CSOUND_W], 0);
 	}
 
@@ -620,8 +619,6 @@ mkControl(Widget main_w)
 	    	"Toggle a tool to calibrate telescope axis orientations"},
 	    {"No Confirm",  1, g_confirm,   &g_w[CCNFOFF_W],
 	    	"Toggle whether to confirm actions first"},
-	    {"Batch Mode",  1, batchCB,  &g_w[CBATCH_W],
-	    	"Toggle controlling things here or via a prepared schedule"},
 	    {"Paddle",      0, g_paddle, &g_w[CPADDLE_W],
 	    	"Toggle a tool to directly command telescope motions"}, 
 	    {"Sounds",      1, soundCB,  &g_w[CSOUND_W],
@@ -695,12 +692,10 @@ mkStatus(Widget main_w)
 	    Widget *wp;
 	} Ctrl;
 	static Ctrl ctrls[] = {
-	    {"Batch", &g_w[SBLT_W]},
 	    {"Tracking", &g_w[STLT_W]},
 	    {"Slewing", &g_w[SSLT_W]},
 	    {"Homing", &g_w[SHLT_W]},
 	    {"Limiting", &g_w[SLLT_W]},
-	    {"Weather", &g_w[SWLT_W]},
 	    {"Confirm", &g_w[SCLT_W]},
 	};
 	Widget fr_w, f_w;
@@ -1013,7 +1008,7 @@ mkInfo(Widget main_w)
 	for (i = 0; i < XtNumber(l_w1); i++) {
 	    l_w1[i] = XtVaCreateManagedWidget ("IL", xmTextFieldWidgetClass,lf_w,
 		XmNbackground, uneditableColor,
-		XmNcolumns, 8,
+		XmNcolumns, 5,
 		XmNcursorPositionVisible, False,
 		XmNeditable, False,
 		XmNmarginHeight, 1,
@@ -1035,7 +1030,8 @@ mkInfo(Widget main_w)
 	    NULL);
 
 	lf_w = XtVaCreateManagedWidget ("ILF", xmFormWidgetClass, f_w,
-	    XmNtopAttachment, XmATTACH_FORM,
+	    XmNtopAttachment, XmATTACH_WIDGET,
+            XmNtopWidget, sep_w,
 	    XmNleftAttachment, XmATTACH_FORM,
 	    XmNrightAttachment, XmATTACH_FORM,
 	    NULL);
@@ -1055,7 +1051,7 @@ mkInfo(Widget main_w)
 	for (i = 0; i < XtNumber(l_w2); i++) {
 	    l_w2[i] = XtVaCreateManagedWidget ("IL", xmTextFieldWidgetClass,lf_w,
 		XmNbackground, uneditableColor,
-		XmNcolumns, 8,
+		XmNcolumns, 5,
 		XmNcursorPositionVisible, False,
 		XmNeditable, False,
 		XmNmarginHeight, 1,

@@ -3,8 +3,7 @@
 #ifndef TELSTATSHM_H
 #define TELSTATSHM_H
 
-#include "ccdcamera.h"
-#include "scan.h"
+#include "circum.h"
 
 /* shared memory key; can be anything unlikely ;-)
  * N.B. bug in some ipcrm's prevents removing it if it's greater than 1<<31.
@@ -151,9 +150,6 @@ typedef struct {
     double dometaz;		/* dome target azimuth, rads +E of N */
     DomeState domestate;	/* dome state */
     DShState shutterstate;	/* shutter state */
-
-    /* info about the current or next run. filled periodically by telrun */
-    Scan scan;
 
     /* Limits with dome closed */
     double negaltlimdc;

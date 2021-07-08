@@ -27,17 +27,14 @@ typedef enum {
     CRELOAD_W,
     CCALIBA_W,
     CPADDLE_W,
-    CBATCH_W,
     CCNFOFF_W,
     CSOUND_W,
 
     /* status */
-    SBLT_W,
     STLT_W,
     SSLT_W,
     SHLT_W,
     SLLT_W,
-    SWLT_W,
     SCLT_W,
 
     /* dome and shutter */

@@ -8,6 +8,6 @@ include_directories ("${CORE_LIBS_DIR}/misc")
 
 add_executable(csimc ${CSIMC_SRC})
 
-target_link_libraries (csimc astro fli m misc)
+target_link_libraries (csimc astro m misc)
 
 install (TARGETS csimc DESTINATION bin)

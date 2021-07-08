@@ -26,15 +26,11 @@
 #include "astro.h"
 #include "circum.h"
 #include "misc.h"
-/* #include "db.h" */
 #include "xtools.h"
-#include "ccdcamera.h"
 #include "configfile.h"
 #include "telenv.h"
 #include "telstatshm.h"
 #include "cliserv.h"
-/* #include "fits.h" */
-/* #include "wcs.h" */
 #include "strops.h"
 
 #include "xobs.h"
