@@ -66,7 +66,6 @@ static int atTarget (void);
 static int trackObj (Obj *op, int first);
 static void findAxes (Now *np, Obj *op, double *xp, double *yp, double *rp);
 static int chkLimits (int wrapok, double *xp, double *yp, double *rp);
-static int chkDomeLimits (void);
 static void jogTrack (int first, char dircode);
 static void trackUpdateVel (void);
 static void jogSlew (int first, char dircode);
@@ -94,10 +93,6 @@ int tel_ishomed (void);
 
 static double jog_hvel;         /* jog HA velocity */
 static double jog_dvel;         /* jog Dec velocity */
-
-static double last_alt;
-static double last_az;
-static int last_set = 0;
 
 /* called when we receive a message from the Tel fifo.
  * as well as regularly with !msg just to update things.
@@ -306,9 +301,6 @@ tel_limits(int first, ...)
 	/* stay up to date */
 	readRaw();
 	mkCook();
-	if(chkDomeLimits())
-	  /* Dome crash imminent */
-	  tel_stop(1);
 
 	if (first) {
 	    char *msg;
@@ -624,9 +616,6 @@ tel_altaz (int first, ...)
 	/* stay up to date */
 	readRaw();
 	mkCook();
-	if(chkDomeLimits())
-	  /* Dome crash imminent */
-	  tel_stop(1);
 
 	if (checkAxes() < 0) {
 	    stopTel(1);
@@ -726,9 +715,6 @@ tel_hadec (int first, ...)
 	/* stay up to date */
 	readRaw();
 	mkCook();
-	if(chkDomeLimits())
-	  /* Dome crash imminent */
-	  tel_stop(1);
 
 	if (checkAxes() < 0) {
 	    stopTel(1);
@@ -967,9 +953,6 @@ trackObj (Obj *op, int first)
 	/* update actual position info */
 	readRaw();
 	mkCook();
-	if(chkDomeLimits())
-	  /* Dome crash imminent */
-	  tel_stop(1);
 
 	/* check axes */
 	if (checkAxes() < 0) {
@@ -1335,35 +1318,6 @@ chkLimits (int wrapok, double *xp, double *yp, double *rp)
 	char str[64];
 	double poslim, neglim, alt, az;
 
-	/* Check if inside dome */
-	if(!(telstatshmp->shutterstate == SH_OPEN ||
-	     telstatshmp->shutterstate == SH_ABSENT)) {
-	  /* Yep, truncate at dome limits first */
-	  xyr2altaz(*xp, *yp, *rp, &alt, &az);
-
-	  if(alt <= telstatshmp->negaltlimdc) {
-	    fs_sexa(str, raddeg(alt), 4, 3600);
-	    fifoWrite(Tel_Id, -2, "%s hits negative altitude limit inside dome", str);
-	    return(-1);
-	  }
-	  if(alt >= telstatshmp->posaltlimdc) {
-	    fs_sexa(str, raddeg(alt), 4, 3600);
-	    fifoWrite(Tel_Id, -3, "%s hits positive altitude limit inside dome", str);
-	    return(-1);
-	  }
-
-	  if(az <= telstatshmp->negazlimdc) {
-	    fs_sexa(str, raddeg(az), 4, 3600);
-	    fifoWrite(Tel_Id, -2, "%s hits negative azimuth limit inside dome", str);
-	    return(-1);
-	  }
-	  if(az >= telstatshmp->posazlimdc) {
-	    fs_sexa(str, raddeg(az), 4, 3600);
-	    fifoWrite(Tel_Id, -3, "%s hits positive azimuth limit inside dome", str);
-	    return(-1);
-	  }
-	}
-
 	/* store so we can effectively access them via a mip */
 	valp[TEL_HM] = xp;
 	valp[TEL_DM] = yp;
@@ -1413,55 +1367,6 @@ chkLimits (int wrapok, double *xp, double *yp, double *rp)
 
 	/* if get here, all ok */
 	return (0);
-}
-
-static int chkDomeLimits (void) {
-  char str[64];
-  int rv = 0;
-
-  double delta_alt, delta_az;
-
-  if(telstatshmp->shutterstate == SH_OPEN ||
-     telstatshmp->shutterstate == SH_ABSENT) {
-    /* Store alt / az for next time */
-    last_alt = telstatshmp->Calt;
-    last_az = telstatshmp->Caz;
-    last_set = 1;
-
-    return(0);  /* Always OK */
-  }
-
-  delta_alt = telstatshmp->Calt - last_alt;
-  delta_az = telstatshmp->Caz - last_az;
-
-  if(telstatshmp->Calt <= telstatshmp->negaltlimdc && delta_alt < 0) {
-    fs_sexa(str, raddeg(telstatshmp->Calt), 4, 3600);
-    fifoWrite(Tel_Id, -2, "%s hits negative altitude limit inside dome", str);
-    rv = 1;
-  }
-  if(telstatshmp->Calt >= telstatshmp->posaltlimdc && delta_alt > 0) {
-    fs_sexa(str, raddeg(telstatshmp->Calt), 4, 3600);
-    fifoWrite(Tel_Id, -3, "%s hits positive altitude limit inside dome", str);
-    rv = 1;
-  }
-  
-  if(telstatshmp->Caz <= telstatshmp->negazlimdc && delta_az < 0) {
-    fs_sexa(str, raddeg(telstatshmp->Caz), 4, 3600);
-    fifoWrite(Tel_Id, -2, "%s hits negative azimuth limit inside dome", str);
-    rv = 1;
-  }
-  if(telstatshmp->Caz >= telstatshmp->posazlimdc && delta_az > 0) {
-    fs_sexa(str, raddeg(telstatshmp->Caz), 4, 3600);
-    fifoWrite(Tel_Id, -3, "%s hits positive azimuth limit inside dome", str);
-    rv = 1;
-  }
-
-  /* Store alt / az for next time */
-  last_alt = telstatshmp->Calt;
-  last_az = telstatshmp->Caz;
-  last_set = 1;
-
-  return(rv);
 }
 
 /* set all desireds to currents */
@@ -1702,7 +1607,6 @@ initCfg()
  	static double HT, DT, XP, YC, NP, R0;
  	static double HPOSLIM, HNEGLIM, DPOSLIM, DNEGLIM, RNEGLIM, RPOSLIM;
 	static int HSTEP, HSIGN, DSTEP, DSIGN;
-	static double POSALTLIMDC, NEGALTLIMDC, POSAZLIMDC, NEGAZLIMDC;
 
 	static CfgEntry hcfg[] = {
 	    {"HT",		CFG_DBL, &HT},
@@ -1723,11 +1627,6 @@ initCfg()
 	    {"HSIGN",		CFG_INT, &HSIGN},
 	    {"DSTEP",		CFG_INT, &DSTEP},
 	    {"DSIGN",		CFG_INT, &DSIGN},
-
-	    {"POSALTLIMDC",	CFG_DBL, &POSALTLIMDC},
-	    {"NEGALTLIMDC",	CFG_DBL, &NEGALTLIMDC},
-	    {"POSAZLIMDC",	CFG_DBL, &POSAZLIMDC},
-	    {"NEGAZLIMDC",	CFG_DBL, &NEGAZLIMDC},
 	};
 
 	static int LARGEXP;
@@ -1908,12 +1807,6 @@ initCfg()
 	tap->hposlim = telstatshmp->minfo[TEL_HM].poslim;
 
 	telstatshmp->dt = 100;		/* not critical */
-
-	/* Set alt/az limits inside dome */
-	telstatshmp->negaltlimdc = NEGALTLIMDC;
-	telstatshmp->posaltlimdc = POSALTLIMDC;
-	telstatshmp->negazlimdc = NEGAZLIMDC;
-	telstatshmp->posazlimdc = POSAZLIMDC;
 
 	/* re-read the mesh  file */
 	init_mount_cor();

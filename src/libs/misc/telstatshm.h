@@ -151,12 +151,6 @@ typedef struct {
     DomeState domestate;	/* dome state */
     DShState shutterstate;	/* shutter state */
 
-    /* Limits with dome closed */
-    double negaltlimdc;
-    double posaltlimdc;
-    double negazlimdc;
-    double posazlimdc;
-
     /* Dome alarm */
     int domealarm;
 } TelStatShm;

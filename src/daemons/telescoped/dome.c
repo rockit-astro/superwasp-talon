@@ -78,7 +78,6 @@ static void initCfg(void);
 static void openChannels(void);
 static void closeChannels(void);
 
-static int check_tellimits(void);
 static void d_readshpos (void);
 static void d_getalarm (void);
 
@@ -438,10 +437,6 @@ dome_close (int first, ...)
 	    return;
 	}
 
-	/* Check it's OK for current telescope position */
-	if(!check_tellimits())
-	  return;
-	
 	if (first) {
 	    /* set new state */
 	    dome_to = mjd + SHUTTERTO;
@@ -1233,35 +1228,6 @@ closeChannels()
   else {
   	sfd = cfd = 0;
   }
-}
-
-static int check_tellimits(void) {
-  char str[64];
-  int rv = 1;
-
-  if(telstatshmp->Calt <= telstatshmp->negaltlimdc) {
-    fs_sexa(str, raddeg(telstatshmp->Calt), 4, 3600);
-    fifoWrite(Dome_Id, -2, "%s hits negative altitude limit inside dome", str);
-    rv = 0;
-  }
-  if(telstatshmp->Calt >= telstatshmp->posaltlimdc) {
-    fs_sexa(str, raddeg(telstatshmp->Calt), 4, 3600);
-    fifoWrite(Dome_Id, -3, "%s hits positive altitude limit inside dome", str);
-    rv = 0;
-  }
-  
-  if(telstatshmp->Caz <= telstatshmp->negazlimdc) {
-    fs_sexa(str, raddeg(telstatshmp->Caz), 4, 3600);
-    fifoWrite(Dome_Id, -2, "%s hits negative azimuth limit inside dome", str);
-    rv = 0;
-  }
-  if(telstatshmp->Caz >= telstatshmp->posazlimdc) {
-    fs_sexa(str, raddeg(telstatshmp->Caz), 4, 3600);
-    fifoWrite(Dome_Id, -3, "%s hits positive azimuth limit inside dome", str);
-    rv = 0;
-  }
-
-  return(rv);
 }
 
 static void d_readshpos () {
