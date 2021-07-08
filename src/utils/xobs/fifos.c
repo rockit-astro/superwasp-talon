@@ -33,7 +33,6 @@ static void tel_rd_cb (XtPointer client, int *fdp, XtInputId *idp);
 static void filter_rd_cb (XtPointer client, int *fdp, XtInputId *idp);
 static void focus_rd_cb (XtPointer client, int *fdp, XtInputId *idp);
 static void dome_rd_cb (XtPointer client, int *fdp, XtInputId *idp);
-static void lights_rd_cb (XtPointer client, int *fdp, XtInputId *idp);
 static void cam_rd_cb (XtPointer client, int *fdp, XtInputId *idp);
 
 /* this is used to describe the several FIFOs used to communicate with
@@ -54,7 +53,6 @@ static FifoInfo fifos[] = {
     {"Filter",	Filter_Id,	filter_rd_cb},
     {"Focus",	Focus_Id,	focus_rd_cb},
     {"Dome",	Dome_Id,	dome_rd_cb},
-    {"Lights",	Lights_Id,	lights_rd_cb},
     {"Camera",	Cam_Id,		cam_rd_cb},
 };
 
@@ -136,12 +134,10 @@ resetSW()
 	/* always send to all in case being turned off/on */
 	cli_move_telescope();
 	cli_move_dome();
-	cli_move_lights();
 	fifoMsg (Tel_Id, "Reset");
 	fifoMsg (Dome_Id, "Reset");
 	fifoMsg (Filter_Id, "Reset");
 	fifoMsg (Focus_Id, "Reset");
-	fifoMsg (Lights_Id, "Reset");
 }
 
 /* shut down all activity */
@@ -275,24 +271,6 @@ XtInputId *idp;         /* pointer to input id */
 
 	updateStatus(1);
 	check_dome_reply(rv, buf);
-}
-
-/* called whenever we get input from the Lights fifo */
-/* ARGSUSED */
-static void
-lights_rd_cb (client, fdp, idp)
-XtPointer client;       /* file name */
-int *fdp;               /* pointer to file descriptor */
-XtInputId *idp;         /* pointer to input id */
-{
-	char buf[1024];
-	int rv;
-
-	rv = fifoRead (Lights_Id, buf, sizeof(buf));
-	msg ("Lights: %s", buf);
-
-	updateStatus(1);
-	check_lights_reply(rv, buf);
 }
 
 /* called whenever we get input from the camerad fifo */

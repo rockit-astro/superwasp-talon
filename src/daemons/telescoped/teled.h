@@ -2,7 +2,7 @@
  * N.B. see fifos[] in telescoped.c
  */
 typedef enum {
-    Tel_Id, Filter_Id, Focus_Id, Dome_Id, Lights_Id, Power_Id
+    Tel_Id, Filter_Id, Focus_Id, Dome_Id
 } FifoId;
 
 /* CSIMC info */
@@ -49,16 +49,9 @@ extern FilterInfo *findFilter (char name);
 /* focus.c */
 extern void focus_msg (char *msg);
 
-/* lights.c */
-extern void lights_msg (char *msg);
-
 /* mountcor.c */
 extern void init_mount_cor(void);
 extern void tel_mount_cor (double ha, double dec, double *dhap, double *ddecp);
-
-/* power */
-extern int chkPowerfail (void);
-extern void power_msg (char *msg);
 
 /* tel.c */
 extern void tel_msg (char *msg);

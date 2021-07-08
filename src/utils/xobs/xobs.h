@@ -2,19 +2,8 @@
  * N.B. order must match the arrays in fifos.c and control.c.
  */
 
- /* Set to 1 if we have a windscreen (i.e. JSF) */
-#ifndef WINDSCREEN
-#define WINDSCREEN 0
-#endif
-
-
 typedef enum {
-#if WINDSCREEN
-    Tel_Id=0, Filter_Id, Focus_Id, Dome_Id, Lights_Id, Cam_Id, Screen_Id,
-#else
-    Tel_Id=0, Filter_Id, Focus_Id, Dome_Id, Lights_Id, Cam_Id,
-#endif
-    N_Id
+    Tel_Id=0, Filter_Id, Focus_Id, Dome_Id, Cam_Id, N_Id
 } FifoId;
 
 /* xobs.c */

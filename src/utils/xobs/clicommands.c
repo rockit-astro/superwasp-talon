@@ -37,11 +37,10 @@ extern char cli_tmp_image[16384];
 static int current_tel_cmd;    /* current command on telescope */
 static int current_dome_cmd;   /* current command on dome */
 static int current_cam_cmd;    /* current command on camera */
-static int current_lights_cmd; /* current command on lights */
+
 static struct cliclient *current_tel_client;
 static struct cliclient *current_dome_client;
 static struct cliclient *current_cam_client;
-static struct cliclient *current_lights_client;
 
 static int expose_onsky = 0;
 static int expose_interrupted = 0;
@@ -50,11 +49,9 @@ void initCliCommand (void) {
   current_tel_cmd = 0;
   current_dome_cmd = 0;
   current_cam_cmd = 0;
-  current_lights_cmd = 0;
   current_tel_client = (struct cliclient *) NULL;
   current_dome_client = (struct cliclient *) NULL;
   current_cam_client = (struct cliclient *) NULL;
-  current_lights_client = (struct cliclient *) NULL;
 }
 
 void clientDisconnect (struct cliclient *c) {
@@ -69,10 +66,6 @@ void clientDisconnect (struct cliclient *c) {
   if(c == current_cam_client) {
     current_cam_client = (struct cliclient *) NULL;
     current_cam_cmd = 0;
-  }
-  if(c == current_lights_client) {
-    current_lights_client = (struct cliclient *) NULL;
-    current_lights_cmd = 0;
   }
 }
 
@@ -124,7 +117,6 @@ int docommand (struct cliclient *c, unsigned char cmd, int paylen,
     case TCSCMD_RASTER:
     case TCSCMD_SCRATCH:
     case TCSCMD_LAST_SKY:
-    case TCSCMD_LIGHTS:
     case TCSCMD_SET_ALARM:
       /* Ignore */
       rv = TCSRET_FAILED;
@@ -183,16 +175,6 @@ int docommand (struct cliclient *c, unsigned char cmd, int paylen,
 
     telcmd = &current_cam_cmd;
     telclient = &current_cam_client;
-  }
-  else if(cmd == TCSCMD_LIGHTS) {
-    if(current_lights_cmd && c != current_lights_client) {
-      cmd_err(errbuf, "lights in use by another client");
-      rv = TCSRET_BUSY;
-      goto doreply;
-    }
-
-    telcmd = &current_lights_cmd;
-    telclient = &current_lights_client;
   }
 
   /* Normal handling of commands */
@@ -926,28 +908,6 @@ int docommand (struct cliclient *c, unsigned char cmd, int paylen,
     }
 
     break;
-  case TCSCMD_LIGHTS:
-    if(paylen != sizeof(int)) {
-      cmd_err(errbuf, "incorrect payload size, expected %d, got %d",
-	      sizeof(int), paylen);
-      rv = TCSRET_USAGE;
-    }
-    else {
-      memcpy(&dtmp, paybuf, sizeof(dtmp));
-
-      if(fifoMsg(Lights_Id, "%d", dtmp) == -1) {
-	cmd_err(errbuf, "lights not available");
-	rv = TCSRET_FAILED;
-      }
-      else {
-	msg("CLI: Lights %d", dtmp);
-	
-	rv = TCSRET_ACK;
-	current_lights_cmd = cmd;
-      }
-    }
-
-    break;
   case TCSCMD_HOME:
     if(paylen != sizeof(unsigned char)) {
       cmd_err(errbuf, "incorrect payload size, expected %d, got %d",
@@ -1166,45 +1126,6 @@ void check_cam_reply (int rv, char *buf) {
   }
 }
 
-void check_lights_reply (int rv, char *buf) {
-  char errstr[ERRSTR_LEN];
-  short cret;
-
-  buf = sstrip(buf);
-
-  if(current_lights_cmd > 0) {
-#ifdef CLI_DEBUG
-    msg("DEBUG: check_lights_reply: %d %s", rv, buf);
-#endif
-
-    /* Check return value */
-    if(rv < 0) {
-      /* Failed, notify user */
-      if(strstr(buf, "weather alert"))
-	cret = TCSRET_WXALERT;
-      else
-	cret = TCSRET_FAILED;
-
-      if(replycommand(current_lights_client, current_lights_cmd,
-		      cret, buf, errstr))
-	fatal(1, "replycommand: %s", errstr);
-
-      current_lights_cmd = 0;
-      current_lights_client = (struct cliclient *) NULL;
-    }
-    else if(rv == 0) {
-      /* Completed */
-      if(replycommand(current_lights_client, current_lights_cmd,
-		      TCSRET_FINISHED, buf, errstr))
-	fatal(1, "replycommand: %s", errstr);
-
-      current_lights_cmd = 0;
-      current_lights_client = (struct cliclient *) NULL;
-    }
-    /* else still going */
-  }
-}
-
 /* Called by GUI to notify of telescope movement */
 
 void cli_move_telescope (void) {
@@ -1259,25 +1180,6 @@ void cli_move_cam (void) {
 
     current_cam_cmd = 0;
     current_cam_client = (struct cliclient *) NULL;
-  }
-}
-
-/* Called by GUI to notify of lights changes */
-
-void cli_move_lights (void) {
-  char errstr[ERRSTR_LEN];
-
-  if(current_lights_cmd > 0) {
-#ifdef CLI_DEBUG
-    msg("DEBUG: aborting command %d due to GUI interaction", current_lights_cmd);
-#endif    
-
-    if(replycommand(current_lights_client, current_lights_cmd,
-		    TCSRET_FAILED, "GUI override", errstr))
-      fatal(1, "replycommand: %s", errstr);
-
-    current_lights_cmd = 0;
-    current_lights_client = (struct cliclient *) NULL;
   }
 }
 
