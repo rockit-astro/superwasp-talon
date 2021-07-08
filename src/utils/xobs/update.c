@@ -58,7 +58,6 @@ updateStatus(int force)
 	int doslow = force || mjd > last_slow + SLOW_DT;
 	int dofast = force || mjd > last_fast + FAST_DT;
 	TelState ts = telstatshmp->telstate;
-	DomeState ds = telstatshmp->domestate;
 	DShState ss = telstatshmp->shutterstate;
 	int busy;
 
@@ -87,8 +86,7 @@ updateStatus(int force)
 		last_tbusy = mjd;
 	}
 
-	busy = ds==DS_ROTATING || ds==DS_HOMING ||
-					    ss==SH_OPENING || ss==SH_CLOSING;
+	busy = ss==SH_OPENING || ss==SH_CLOSING;
 	if (doslow || busy || mjd < last_dbusy + COAST_DT) {
 	    showDome();
 	    if (busy)
@@ -334,29 +332,13 @@ showHL()
 static void
 showDome()
 {
-	static int last_godome = -1, last_goshutter = -1;
-	DomeState ds = telstatshmp->domestate;
-	LtState domelt, sol, scl;
+	static int last_goshutter = -1;
+	LtState sol, scl;
 	int go;
 	int domealarm = telstatshmp->domealarm;
 
 	/* first check whether to allow operator access.
 	 */
-	go = ds != DS_ABSENT && xobs_alone;
-	if (go != last_godome) {
-	    if (go) {
-		XtSetSensitive (g_w[DAUTO_W], True);
-		XtSetSensitive (g_w[DAZ_W], True);
-		XtVaSetValues (g_w[DAZ_W], XmNbackground, editableColor, NULL);
-		XtSetSensitive (g_w[DAZL_W], True);
-	    } else {
-		XtSetSensitive (g_w[DAUTO_W], False);
-		XtSetSensitive (g_w[DAZ_W], False);
-		XtVaSetValues (g_w[DAZ_W], XmNbackground, uneditableColor,NULL);
-		XtSetSensitive (g_w[DAZL_W], False);
-	    }
-	    last_godome = go;
-	}
 	go = telstatshmp->shutterstate != SH_ABSENT && xobs_alone;
 	if (go != last_goshutter) {
 	    if (go) {
@@ -369,30 +351,6 @@ showDome()
 	    last_goshutter = go;
 	}
 
-	switch (ds) {
-	case DS_ABSENT:
-	    domelt = LTIDLE;
-	    break;
-
-	case DS_ROTATING:	/* FALLTHRU */
-	case DS_HOMING:
-	    domelt = LTACTIVE;
-	    break;
-
-	case DS_STOPPED:
-	    if (delra(telstatshmp->dometaz - telstatshmp->domeaz) <= DOMETOL)
-		domelt = LTOK;
-	    else if (telstatshmp->shutterstate == SH_OPEN)
-		domelt = LTWARN; /* open but in wrong position */
-	    else
-		domelt = LTIDLE;
-	    break;
-
-	default:
-	    domelt = LTIDLE;
-	    break;
-	}
-	setLt (g_w[DAZLT_W], domelt);
 
 	switch (telstatshmp->shutterstate) {
 	case SH_ABSENT:  sol = LTIDLE;   scl = LTIDLE;   break;
@@ -413,8 +371,6 @@ showDome()
 
 	setLt (g_w[DOLT_W], sol);
 	setLt (g_w[DCLT_W], scl);
-
-	XmToggleButtonSetState (g_w[DAUTO_W], telstatshmp->autodome, False);
 }
 
 /* For RCS Only -- Do Not Edit */

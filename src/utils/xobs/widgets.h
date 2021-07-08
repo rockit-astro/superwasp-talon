@@ -42,10 +42,6 @@ typedef enum {
     DCLT_W,
     DOPEN_W,
     DCLOSE_W,
-    DAUTO_W,
-    DAZLT_W,
-    DAZL_W,
-    DAZ_W,
 
     /* telescope */
     TSERV_W,

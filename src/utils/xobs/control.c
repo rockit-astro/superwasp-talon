@@ -39,7 +39,7 @@ static void closeCB (Widget w, XtPointer client, XtPointer call);
 /* give ability to home or limit each axis */
 /* name for each fifo */
 typedef enum {
-    H_AX, D_AX, R_AX, O_AX, I_AX, M_AX, N_AX
+    H_AX, D_AX, R_AX, O_AX, I_AX, N_AX
 } HLAxis;
 typedef struct {
     char *name;		/* descriptive name on button */
@@ -54,7 +54,6 @@ static HLInfo hl_info[N_AX] = {
     {"Rotator",       Tel_Id,    'R'},
     {"Focus",         Focus_Id},
     {"Filter",        Filter_Id},
-    {"Dome",          Dome_Id},
 };
 
 void
@@ -299,14 +298,12 @@ hlSetup()
 	XtSetSensitive (hl_info[R_AX].hpbw, !!RMOT->have);
 	XtSetSensitive (hl_info[O_AX].hpbw, !!OMOT->have);
 	XtSetSensitive (hl_info[I_AX].hpbw, !!IMOT->have);
-	XtSetSensitive (hl_info[M_AX].hpbw, telstatshmp->domestate!=DS_ABSENT);
 
 	XtSetSensitive (hl_info[H_AX].lpbw, !!HMOT->have && !!HMOT->havelim);
 	XtSetSensitive (hl_info[D_AX].lpbw, !!DMOT->have && !!DMOT->havelim);
 	XtSetSensitive (hl_info[R_AX].lpbw, !!RMOT->have && !!RMOT->havelim);
 	XtSetSensitive (hl_info[O_AX].lpbw, !!OMOT->have && !!OMOT->havelim);
 	XtSetSensitive (hl_info[I_AX].lpbw, !!IMOT->have && !!IMOT->havelim);
-	XtSetSensitive (hl_info[M_AX].lpbw, telstatshmp->domestate!=DS_ABSENT);
 }
 
 /* called from either home's or limit's close PB.

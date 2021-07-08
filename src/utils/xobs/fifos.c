@@ -150,7 +150,7 @@ stop_all_devices()
 {
 	cli_move_telescope();
 	fifoMsg (Tel_Id, "Stop");
-	if (telstatshmp->domestate != DS_ABSENT || telstatshmp->shutterstate != SH_ABSENT) {
+	if (telstatshmp->shutterstate != SH_ABSENT) {
 	    cli_move_dome();
 	    fifoMsg (Dome_Id, "Stop");
 	}
