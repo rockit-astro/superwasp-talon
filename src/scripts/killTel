@@ -1,0 +1,24 @@
+#!/bin/csh -f
+# kill all telescope-related daemons and tools.
+
+set common = (rund xobs shm telescoped csimcd csimc telrun)
+
+foreach p ($common)
+    echo -n "$p "
+    killp -q $p
+end
+
+echo ""
+echo -n "Cleaning comm"
+rm -f $TELHOME/comm/*.pid >& /dev/null
+echo -n "."
+rm -f $TELHOME/comm/*.in >& /dev/null
+echo -n "."
+rm -f $TELHOME/comm/*.out >& /dev/null
+echo -n "."
+echo "OK"
+
+echo ""
+
+# For RCS Only -- Do Not Edit
+# @(#) $RCSfile: killTel,v $ $Date: 2007/08/26 04:29:40 $ $Revision: 1.4 $ $Name:  $

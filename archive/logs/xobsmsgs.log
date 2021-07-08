@@ -1,0 +1,51 @@
+2021-03-18T20:57:01 Welcome, telescope user.
+2021-03-18T20:57:01 Dome: Not installed
+2021-03-18T20:57:01 Focus: Reset complete
+2021-03-18T20:57:01 Telescope: Reset complete
+2021-03-18T20:57:06 Closing mirror cover
+2021-03-18T20:57:06 Cover: Starting close
+2021-03-18T20:57:06 Cover: Close error: : Untrapped vmc command 'coverClose();' on node 2
+2021-03-18T20:57:12 Opening mirror cover
+2021-03-18T20:57:12 Cover: Starting open
+2021-03-18T20:57:14 All stop
+2021-03-18T20:57:14 Focus: Stop complete
+2021-03-18T20:57:14 Telescope: Stop complete
+2021-03-18T21:03:42 Welcome, telescope user.
+2021-03-18T21:03:42 Dome: Not installed
+2021-03-18T21:03:42 Focus: Reset complete
+2021-03-18T21:03:42 Telescope: Reset complete
+2021-03-18T21:03:52 Opening mirror cover
+2021-03-18T21:03:52 Cover: Starting open
+2021-03-18T21:04:57 Welcome, telescope user.
+2021-03-18T21:04:57 Dome: Not installed
+2021-03-18T21:04:57 Focus: Reset complete
+2021-03-18T21:04:57 Telescope: Reset complete
+2021-03-18T21:05:01 Opening mirror cover
+2021-03-18T21:05:01 Cover: Starting open
+2021-03-18T21:05:06 Cover: Open complete
+2021-03-18T21:05:12 Closing mirror cover
+2021-03-18T21:05:12 Cover: Starting close
+2021-03-18T21:05:17 Cover: Close complete
+2021-03-18T21:26:42 Welcome, telescope user.
+2021-03-18T21:26:42 Dome: Not installed
+2021-03-18T21:26:42 Focus: Reset complete
+2021-03-18T21:26:42 Telescope: Reset complete
+2021-03-19T18:52:19 Welcome, telescope user.
+2021-03-19T18:52:19 Dome: Not installed
+2021-03-19T18:52:19 Focus: Reset complete
+2021-03-19T18:52:19 Telescope: Reset complete
+2021-03-19T18:52:26 Seeking Scope HA/Az home
+2021-03-19T18:52:31 Telescope: Axis 0: home complete
+2021-03-19T18:52:31 Telescope: Scope homing complete
+2021-03-19T18:52:32 Seeking Scope Dec/Alt home
+2021-03-19T18:52:37 Telescope: Axis 1: home complete
+2021-03-19T18:52:37 Telescope: Scope homing complete
+2021-03-19T18:52:48 Slewing to  80:00:00 300:00:00
+2021-03-19T18:52:57 Telescope: Slew complete
+2021-03-19T18:55:59 Welcome, telescope user.
+2021-03-19T18:55:59 Dome: Not installed
+2021-03-19T18:55:59 Focus: Reset complete
+2021-03-19T18:55:59 Telescope: Reset complete
+2021-03-19T18:56:06 Seeking Scope HA/Az home
+2021-03-19T18:56:11 Telescope: Axis 0: home complete
+2021-03-19T18:56:11 Telescope: Scope homing complete

@@ -1,0 +1,3 @@
+#!/bin/csh -f
+# start all telescope-related daemons and tools.
+rund telescoped
