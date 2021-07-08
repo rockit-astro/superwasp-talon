@@ -102,13 +102,6 @@ static int setaz_error = 0;	// set if there is an error during dome_setaz, used 
 /* control and status connections */
 static int cfd, sfd;
 
-/* Telescope status for emergency close ops */
-extern void tel_stow(int first, ...);
-extern int tel_ishomed (void);
-
-int dome_waitingfortel = 0;
-static int wait_error = 0;
-
 /* called when we receive a message from the Dome fifo plus periodically with
  *   !msg to just update things.
  */
@@ -146,7 +139,7 @@ char *msg;
 	}
 
 	/* top priority are emergency stop and weather alerts */
-	if (d_emgstop(msg) || d_chkWx(msg))
+	if (d_emgstop(msg))
 	    return;
 
 	/* handle normal messages and polling */
@@ -179,8 +172,6 @@ char *msg;
 static void
 dome_poll ()
 {
-        static int firsttime = 1;
-
 	if(virtual_mode) {
 		if(DHAVE || SHAVE) {
 			vmcService(DOMEAXIS);
@@ -189,14 +180,6 @@ dome_poll ()
 	
 	if (active_func)
 	    (*active_func)(0);
-	
-	if (SHAVE) {
-	  if(firsttime && tel_ishomed()) {
-	    //d_readshpos();
-	    //d_getalarm();
-	    firsttime = 0;
-	  }
-	}
 
 	if (DHAVE) {
 
@@ -865,50 +848,6 @@ dome_jog (int first, ...)
 	
 }
 
-static void dome_waitforscope(int first, ...) {
-  Now *np = &telstatshmp->now;
-  static double mjd_start = 0;
-
-  if(first) {
-    /* set new state */
-    active_func = dome_waitforscope;
-    mjd_start = mjd;
-  }
-
-  /* Check telescope status */
-  if(dome_waitingfortel == 0) {
-    /* Done, close up */
-    active_func = NULL;
-    dome_close(1);
-    dome_waitingfortel = 0;
-  }
-  else if(dome_waitingfortel == -1 || mjd-mjd_start > STOWTO) {
-    printf("timeout check %f %f %f\n", mjd, mjd_start, STOWTO);
-
-    /* Went wrong */
-    active_func = NULL;
-    
-    /* Can we just close up? */
-    if(check_tellimits()) {
-      /* Yep, go for it */
-      dome_close(1);
-    }
-    else {
-      /* Nope, panic now */
-      fifoWrite(Dome_Id, -14, "Error stowing telescope - DOME IS STILL OPEN!");
-      toTTS("Error stowing telescope - DOME IS STILL OPEN!");
-
-      /* Set off the alarm */
-      dome_alarmset(1, 1);
-      wait_error = 1;
-    }
-
-    dome_waitingfortel = 0;
-  }
-
-  /* Still waiting */
-}
-
 /* find dome home */
 static void dome_alarmset (int first, int alon) {
   if(!SHAVE) {
@@ -974,67 +913,6 @@ d_emgstop(char *msg)
 	    dome_stop (1);
 	}
 
-	dome_poll();
-	
-	return (1);
-}
-
-/* if a weather alert is in progress respond and return 1, else return 0 */
-static int
-d_chkWx(char *msg)
-{
-	WxStats *wp = &telstatshmp->wxs;
-	int wxalert;
-	time_t tnow;
-
-	tnow = time(NULL);
-
-	wp->chktime = tnow;
-
-	if(wp != NULL) {
-		wxalert = (tnow - wp->updtime > WX_TIMEOUT) || wp->alert;
-	} else {
-		wxalert = 0;
-	}
-
-	if (!wxalert || !SHAVE) {
-	    wait_error = 0;
-
-	    if(active_func == dome_waitforscope)
-	      active_func = NULL;
-
-	    dome_waitingfortel = 0;
-
-	    return(0);
-	}
-
-	/* Allow engineering overrides iff the only weather alert is sun */
-	if (wp->alert == WXA_SUN && time(NULL) - wp->updtime < WX_TIMEOUT &&
-	    telstatshmp->engmode)
-	    return (0);
-
-	if (msg || (active_func && active_func != dome_close &&
-		    active_func != dome_waitforscope))
-	    fifoWrite (Dome_Id,
-			-16, "Command cancelled.. weather alert in progress");
-
-	if (active_func != dome_close && active_func != dome_waitforscope &&
-	    SS != SH_CLOSED && !wait_error) {
-	    fifoWrite (Dome_Id, 9, "Weather alert asserted -- closing %s",doorType());
-	    AD = 0;
-
-	    if(DOSTOW && tel_ishomed()) {  /* DANGEROUS */
-	      /* Stow the telescope */
-	      dome_waitingfortel = 1;
-	      tel_stow(1);
-	      dome_waitforscope(1);
-	    }
-	    else {
-	      /* Just close the dome */
-	      dome_close(1);
-	    }
-	}
-	
 	dome_poll();
 	
 	return (1);

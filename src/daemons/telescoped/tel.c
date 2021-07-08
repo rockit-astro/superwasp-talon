@@ -135,8 +135,6 @@ static double last_alt;
 static double last_az;
 static int last_set = 0;
 
-extern int dome_waitingfortel;
-
 /* called when we receive a message from the Tel fifo.
  * as well as regularly with !msg just to update things.
  */
@@ -149,120 +147,39 @@ char *msg;
 	int i;
 	char jog_dir[8];
 	Obj o;
-	WxStats *wp = &telstatshmp->wxs;
-	int wxalert;
 
 	/* dispatch -- stop by default */
 
-	if(wp != NULL) {
-		wxalert = (time(NULL) - wp->updtime > WX_TIMEOUT) || wp->alert;
-	} else {
-		wxalert = 0;
-	}
-
-	if(dome_waitingfortel && !wxalert)
-	  dome_waitingfortel = 0;
-
-	if(wxalert && dome_waitingfortel &&
-	   active_func &&
-	   active_func != tel_stow &&
-	   active_func != tel_altaz &&
-	   active_func != tel_stop) {
-	  fifoWrite (Tel_Id,
-		     -16, "Command cancelled.. weather alert in progress");
-
-	  tel_poll();
-	  return;
-	}
-
 	if (!msg)
 	    tel_poll();
-	else if (strncasecmp (msg, "reset", 5) == 0) {
-	    if(wxalert && dome_waitingfortel)
-	        fifoWrite (Tel_Id,
-			   -16, "Command cancelled.. weather alert in progress");
-	    else
-	        tel_reset(1);
-	}
-	else if (strncasecmp (msg, "home", 4) == 0) {
-	    if(wxalert && dome_waitingfortel)
-	        fifoWrite (Tel_Id,
-			   -16, "Command cancelled.. weather alert in progress");
-	    else
-	        tel_home(1, msg);
-	}
-	else if (strncasecmp (msg, "limits", 6) == 0) {
-	    if(wxalert && dome_waitingfortel)
-	        fifoWrite (Tel_Id,
-			   -16, "Command cancelled.. weather alert in progress");
-	    else
-	        tel_limits(1, msg);
-	}
-	else if (strncasecmp (msg, "stow", 4) == 0) {
-	    if(wxalert && dome_waitingfortel)
-	        fifoWrite (Tel_Id,
-			   -16, "Command cancelled.. weather alert in progress");
-	    else
-	        tel_stow(1, msg);
-	}
-	else if (sscanf (msg, "RA:%lf Dec:%lf Epoch:%lf", &a, &b, &c) == 3) {
-	    if(wxalert && dome_waitingfortel)
-	        fifoWrite (Tel_Id,
-			   -16, "Command cancelled.. weather alert in progress");
-	    else
-	        tel_radecep (1, a, b, c);
-	}
-	else if (sscanf (msg, "RA:%lf Dec:%lf", &a, &b) == 2) {
-	    if(wxalert && dome_waitingfortel)
-	        fifoWrite (Tel_Id,
-			   -16, "Command cancelled.. weather alert in progress");
-	    else
-	        tel_radeceod (1, a, b);
-	}
-	else if (dbformat (msg, &o, &a, &b) == 0) {
-	    if(wxalert && dome_waitingfortel)
-	        fifoWrite (Tel_Id,
-			   -16, "Command cancelled.. weather alert in progress");
-	    else
-	        tel_op (1, &o, a, b);
-	}
-	else if (sscanf (msg, "Alt:%lf Az:%lf", &a, &b) == 2) {
-	    if(wxalert && dome_waitingfortel)
-	        fifoWrite (Tel_Id,
-			   -16, "Command cancelled.. weather alert in progress");
-	    else
-	        tel_altaz (1, a, b);
-	}
-	else if (sscanf (msg, "HA:%lf Dec:%lf", &a, &b) == 2) {
-	    if(wxalert && dome_waitingfortel)
-	        fifoWrite (Tel_Id,
-			   -16, "Command cancelled.. weather alert in progress");
-	    else
-	        tel_hadec (1, a, b);
-	}
-	else if (sscanf (msg, "j%7[NSEWnsew0]", jog_dir) == 1) {
-	    if(wxalert && dome_waitingfortel)
-	        fifoWrite (Tel_Id,
-			   -16, "Command cancelled.. weather alert in progress");
-	    else
-	        tel_jog (1, jog_dir);
-	}
-	else if (sscanf (msg, "Offset %lf,%lf", &a, &b) == 2) {
-	    if(wxalert && dome_waitingfortel)
-	        fifoWrite (Tel_Id,
-			   -16, "Command cancelled.. weather alert in progress");
-	    else
-	        offsetTracking (1, a, b, 1);
-	}
+	else if (strncasecmp (msg, "reset", 5) == 0)
+	    tel_reset(1);
+	else if (strncasecmp (msg, "home", 4) == 0)
+	    tel_home(1, msg);
+	else if (strncasecmp (msg, "limits", 6) == 0)
+	    tel_limits(1, msg);
+	else if (strncasecmp (msg, "stow", 4) == 0)
+	    tel_stow(1, msg);
+	else if (sscanf (msg, "RA:%lf Dec:%lf Epoch:%lf", &a, &b, &c) == 3)
+	    tel_radecep (1, a, b, c);
+	else if (sscanf (msg, "RA:%lf Dec:%lf", &a, &b) == 2)
+	    tel_radeceod (1, a, b);
+	else if (dbformat (msg, &o, &a, &b) == 0)
+	    tel_op (1, &o, a, b);
+	else if (sscanf (msg, "Alt:%lf Az:%lf", &a, &b) == 2)
+	    tel_altaz (1, a, b);
+	else if (sscanf (msg, "HA:%lf Dec:%lf", &a, &b) == 2)
+	    tel_hadec (1, a, b);
+	else if (sscanf (msg, "j%7[NSEWnsew0]", jog_dir) == 1)
+	    tel_jog (1, jog_dir);
+	else if (sscanf (msg, "Offset %lf,%lf", &a, &b) == 2)
+	    offsetTracking (1, a, b, 1);
         else if (sscanf (msg, "raster %d %lf", &i, &a) == 2)
 	    tel_raster_enable(i, a);
         else if (sscanf (msg, "engmode %d", &i) == 1)
 	    tel_engmode(i);
 	else {
 	    /* User-issued stop */
-	    if(dome_waitingfortel)
-	        dome_waitingfortel = -1;
-
 	    tel_stop(1);
 	}
 }
@@ -528,15 +445,7 @@ tel_stow(int first, ...)
 {
     char buf[128];
 
-    if(dome_waitingfortel) {
-      if(active_func)
-	fifoWrite(Tel_Id,
-		  -16, "Command cancelled.. weather alert in progress");
-
-      tel_stop(1);
-    }
-    else
-      allstop();
+    allstop();
 
     fifoWrite (Tel_Id, 0, "Telescope stow underway");
     tel_altaz(1, STOWALT, STOWAZ);
@@ -701,8 +610,6 @@ tel_altaz (int first, ...)
 	    hd2xyr (ha, dec, &x, &y, &r);
 	    if (chkLimits (1, &x, &y, &r) < 0) {
 		active_func = NULL;;
-		if(dome_waitingfortel)
-		  dome_waitingfortel = -1;
 		return;	/* Tel_Id already informed */
 	    }
 
@@ -741,8 +648,6 @@ tel_altaz (int first, ...)
 	    		char buf[128];
 			    if(axisHomedCheck(mip, buf)) {
 				    active_func = NULL;
-				    if(dome_waitingfortel)
-				      dome_waitingfortel = -1;
 				    stopTel(0);
 				    fifoWrite (Tel_Id, -1, "Error: %s", buf);
 	    			toTTS ("Error: %s", buf);
@@ -772,16 +677,12 @@ tel_altaz (int first, ...)
 	if (checkAxes() < 0) {
 	    stopTel(1);
 	    active_func = NULL;
-	    if(dome_waitingfortel)
-	      dome_waitingfortel = -1;
 	}
 
 	if (atTarget() == 0) {
 	    stopTel(0);
 	    fifoWrite (Tel_Id, 0, "Slew complete");
 	    toTTS ("The telescope slew is complete");
-	    if(dome_waitingfortel)
-	      dome_waitingfortel = 0;
 	    active_func = NULL;
 	}
 }

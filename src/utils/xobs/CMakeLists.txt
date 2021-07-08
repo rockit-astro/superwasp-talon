@@ -2,7 +2,6 @@ cmake_minimum_required (VERSION 3.0)
 project (xobs)
 
 set(XOBS_SRC 
-        autofocus.c
         xobs.c 
         batch.c 
         calaxes.c 

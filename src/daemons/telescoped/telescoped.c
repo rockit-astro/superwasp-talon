@@ -304,11 +304,8 @@ init_shm()
 	int len = sizeof(TelStatShm);
 	int shmid;
 	long addr;
-	int new;
-	WxStats wxtmp;
 
 	/* open/create */
-	new = 0;
 	shmid = shmget (TELSTATSHMKEY, len, 0664);
 	if (shmid < 0) {
 	    if (errno == ENOENT)
@@ -317,7 +314,6 @@ init_shm()
 		tdlog ("shmget: %s", strerror(errno));
 		exit (1);
 	    }
-	    new = 1;
 	}
 
 	/* connect */
@@ -330,15 +326,8 @@ init_shm()
 	/* handy */
 	telstatshmp = (TelStatShm *) addr;
 
-	if(!new)
-	    memcpy(&wxtmp, &(telstatshmp->wxs), sizeof(wxtmp));
-
 	/* always zero when we start */
 	memset ((void *)addr, 0, len);
-
-	/* put back weather to avoid immediate close */
-	if(!new)
-	    memcpy(&(telstatshmp->wxs), &wxtmp, sizeof(wxtmp));
 }
 
 static void

@@ -135,8 +135,6 @@ static char logfn[] = "archive/logs/xobsmsgs.log";
 
 static int limits_sensitive;
 static int calib_sensitive;
-static int test_sensitive;
-static int autofocus_sensitive;
 
 /* build the entire GUI off toplevel_w */
 void
@@ -446,9 +444,7 @@ guiSensitive (int whether)
 	    &g_w[TTRACK_W],
 	    &g_w[CFHOME_W],
 	    &g_w[CFLIM_W],
-	    &g_w[CTEST_W],
 	    &g_w[CRELOAD_W],
-	    &g_w[CAUTOF_W],
 	    &g_w[CCALIBA_W],
 	    &g_w[CPADDLE_W],
 	    &g_w[CCNFOFF_W],
@@ -463,8 +459,6 @@ guiSensitive (int whether)
 
 	limits_sensitive = (whether && xobs_alone);
 	calib_sensitive = limits_sensitive;
-	test_sensitive = limits_sensitive;
-	autofocus_sensitive = limits_sensitive;
 
 	/* these are only ever sensitive if we are alone */
 	if (!xobs_alone) {
@@ -489,18 +483,12 @@ void showEngmode () {
   if(!curmode) {
     limits_sensitive = XtIsSensitive(g_w[CFLIM_W]);
     calib_sensitive = XtIsSensitive(g_w[CCALIBA_W]);
-    test_sensitive = XtIsSensitive(g_w[CTEST_W]);
-    autofocus_sensitive = XtIsSensitive(g_w[CAUTOF_W]);
     XtSetSensitive(g_w[CFLIM_W], 0);
     XtSetSensitive(g_w[CCALIBA_W], 0);
-    XtSetSensitive(g_w[CTEST_W], 0);
-    XtSetSensitive(g_w[CAUTOF_W], 0);
   }
   else {
     XtSetSensitive(g_w[CFLIM_W], 1);
     XtSetSensitive(g_w[CCALIBA_W], 1);
-    XtSetSensitive(g_w[CTEST_W], 1);
-    XtSetSensitive(g_w[CAUTOF_W], 1);
   }
 }
 
@@ -878,10 +866,6 @@ mkDome(Widget main_w)
 	return (fr_w);
 }
 
-static void setwxalert (Widget w, XtPointer client, XtPointer call) {
-  telstatshmp->wxs.alert = !telstatshmp->wxs.alert;
-  telstatshmp->wxs.updtime = time(NULL);
-}
 
 static Widget
 mkControl(Widget main_w)
@@ -902,16 +886,12 @@ mkControl(Widget main_w)
 	    	"Start telescope seeking all home switches, if any"},
 	    {"Find Limits", 0, g_limit,  &g_w[CFLIM_W],
 	    	"Start telescope seeking all limit switches, if any"},
-	    {"Test",        0, setwxalert, &g_w[CTEST_W],
-	    	"Toggle a low-level diagnostic utility"}, 
 	    {"Reload",      0, g_init,   &g_w[CRELOAD_W],
 	    	"Reread all .cfg config files"},
 	    {"Calib Axes",  0, g_calib,  &g_w[CCALIBA_W],
 	    	"Toggle a tool to calibrate telescope axis orientations"},
 	    {"No Confirm",  1, g_confirm,   &g_w[CCNFOFF_W],
 	    	"Toggle whether to confirm actions first"},
-	    {"Auto Focus",  0, g_focus,  &g_w[CAUTOF_W],
-	    	"Toggle a tool to automatically focus the camera"},
 	    {"Batch Mode",  1, batchCB,  &g_w[CBATCH_W],
 	    	"Toggle controlling things here or via a prepared schedule"},
 	    {"Paddle",      0, g_paddle, &g_w[CPADDLE_W],
@@ -1269,15 +1249,6 @@ mkInfo(Widget main_w)
 	    {"Sun", &g_w[ISUN_W], "Sun direction and altitude"},
 	    {"Dusk", &g_w[IDUSK_W], "UT end of twilight"},
 	    {"Dawn", &g_w[IDAWN_W], "UT start of twilight"},
-	    {"Wind", &g_w[IWIND_W], "Wind speed, KPH"},
-	    {"Direction", &g_w[IWDIR_W], "Wind direction"},
-	    {"Pressure", &g_w[IPRES_W], "Station air pressure, mB"},
-	    {"In Temp", &g_w[ITEMP_W], "Inside air temperature, C"},
-	    {"In Humidity", &g_w[IHUM_W], "Inside relative humidity"},
-	    {"Dew point", &g_w[IDEW_W], "Inside dew point"},
-	    {"Out Temp", &g_w[IT1_W], "Outside air temperature, C"},
-	    {"Out Humidity", &g_w[IH1_W], "Outside relative humidity"},
-	    {"Exposure num", &g_w[EXPNUM_W], "Number of last exposure"},
 	};
 	char site[1024];
 	Widget fr_w, f_w;

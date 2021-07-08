@@ -145,7 +145,6 @@ resetSW()
 
 	/* keep up with filter assignments */
 	fillFilterMenu();
-	afoc_initCfg();
 }
 
 /* shut down all activity */
@@ -260,7 +259,6 @@ XtInputId *idp;         /* pointer to input id */
 
 	s = fifoRead (Focus_Id, buf, sizeof(buf));
 	msg ("Focus: %s", buf);
-	afoc_foc_cb(s, buf);	/* tell autofocus in case he's running */
 	updateStatus(1);
 }
 
@@ -314,7 +312,6 @@ XtInputId *idp;         /* pointer to input id */
 	s = fifoRead (Cam_Id, buf, sizeof(buf));
 	msg ("Camera: %s", buf);
 	check_cam_reply(s, buf);
-	afoc_cam_cb (s, buf);
 }
 
 /* For RCS Only -- Do Not Edit */

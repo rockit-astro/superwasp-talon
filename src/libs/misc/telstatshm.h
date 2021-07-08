@@ -26,55 +26,6 @@ typedef struct {
     double hneglim, hposlim;	/* iff GERMEQ: copies of minfo[TEL_HM].*lim */
 } TelAxes;
 
-/* weather info.
- * N.B. temp and pres are in Now.
- */
-#define MAUXTP	3		/* max aux temp probes supported */
-typedef struct {
-    int wspeed;			/* wind speed, kph */
-    int wdir;			/* wind source az, degs E of N */
-    char wdirstr[4];		/* "N", "NNE", etc (includes trailing \0) */
-    int humidity;		/* % */
-    int rain;			/* today's rain total, .1 mm */
-    int rain_flag;              /* flag indicating rainfall in the last 2 mins */
-    double dewpoint;            /* dew point */
-    int dewvalid;               /* dew point valid? */
-    int alert;			/* "or" of applicable WxAlerts bit flags */
-    double auxt[MAUXTP];	/* aux temp probe values, C */
-    int auxtmask;		/* ((1<<i) & auxtmask) set if auxt[i] is real */
-    int auxh[MAUXTP];	        /* aux humid probe values, % */
-    int auxhmask;		/* ((1<<i) & auxhmask) set if auxh[i] is real */
-    int storm_dist;             /* storm distance */
-    double storm_dir;           /* compass bearing to storm */
-    int storm_valid;            /* storm info valid? */
-    float skyt;                 /* sky temp from cloud sensor */
-    int cswet;                  /* wet flag from cloud sensor */
-    int cloud_valid;            /* cloud info valid? */
-    time_t updtime;		/* set by wxd when these fields are updated */
-    time_t alertontime;         /* time last alert was asserted */
-    time_t alertofftime;        /* time last alert was cancelled */
-    time_t chktime;             /* time last alert was checked for by dome.c */
-} WxStats;
-
-/* updtime must be more recent than... */
-#define WX_TIMEOUT 120  /* seconds */
-
-/* mask of reasons for current weather alert */
-typedef enum {
-    WXA_MAXT = 1,		/* temp is above max */
-    WXA_MINT = 2,		/* temp is below max */
-    WXA_MAXH = 4,		/* humidity is above max */
-    WXA_MAXW = 8,		/* wind is above max */
-    WXA_RAIN = 16,		/* rain detected */
-    WXA_DEW  = 32,		/* temp below dew point */
-    WXA_MAXT1 = 64,		/* out temp is above max */
-    WXA_MINT1 = 128,		/* out temp is below max */
-    WXA_MAXH1 = 256,		/* out humidity is above max */
-    WXA_STORM = 512,            /* thunderstorm detected */
-    WXA_CLOUD = 1024,           /* cloud detected */
-    WXA_SUN   = 2048,           /* sun is up */
-} WxAlerts;
-
 /* info about each motor.
  * all measures and directions are canonical unless stated as raw.
  * when we say steps we might really mean microsteps.
@@ -205,7 +156,6 @@ typedef struct {
     int camtarg;		/* target ccd camera temperature */
     char filter;		/* current filter, or < or > if moving */
     int lights;			/* flat lights: -1 none; 0 off; > 0 intensity */
-    int autofocus : 1;		/* set when focus is tracking filter and temp */
     int jogging_ison : 1;	/* currently jogged/jogging from target */
     int autodome : 1;		/* set when dome is tracking scope */
     double domeaz;		/* current dome az, rads +E of N */
@@ -215,9 +165,6 @@ typedef struct {
 
     /* info about the current or next run. filled periodically by telrun */
     Scan scan;
-
-    /* other weather stats */
-    WxStats wxs;
 
     /* last integration time */
     double camexptime;
