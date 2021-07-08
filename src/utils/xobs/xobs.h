@@ -26,12 +26,6 @@ extern Obj sunobj, moonobj;
 extern int xobs_alone;
 extern void die (void);
 
-/* autofocus.c */
-extern void afoc_manage (void);
-extern void afoc_foc_cb (int code, char msg[]);
-extern void afoc_cam_cb (int code, char msg[]);
-extern void afoc_initCfg (void);
-
 /* batch.c */
 extern int batchIsOn(void);
 extern void batchOn(void);
@@ -167,7 +161,6 @@ extern void cli_move_telescope(void);
 extern void cli_move_dome(void);
 extern void cli_move_cam(void);
 extern void cli_move_lights(void);
-extern void cli_wxalert(int);
 
 /* For RCS Only -- Do Not Edit
  * @(#) $RCSfile: xobs.h,v $ $Date: 2006/01/13 20:42:48 $ $Revision: 1.1.1.1 $ $Name:  $

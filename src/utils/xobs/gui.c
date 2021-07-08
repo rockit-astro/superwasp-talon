@@ -110,7 +110,6 @@ static int msg_txtl;
 
 static Widget mkLogo (Widget main_w);
 static Widget mkCurrent(Widget main_w);
-static Widget mkCamera(Widget main_w);
 static Widget mkDome(Widget main_w);
 static Widget mkControl(Widget main_w);
 static Widget mkStatus(Widget main_w);
@@ -126,9 +125,6 @@ static void mkFrame (Widget parent_w, char *name, char *title,
 static void lightExpCB (Widget wid, XtPointer client, XtPointer call);
 static void drawLt (Widget wid);
 static void wltprintf (char *tag, Widget w, char *fmt, ...);
-static void filterCB (Widget w, XtPointer client, XtPointer call);
-static Widget mkFilterOp (Widget fof_w);
-static void mkFlatLights (Widget form_w, Widget light_w);
 static void mkGC(void);
 
 static char logfn[] = "archive/logs/xobsmsgs.log";
@@ -146,7 +142,6 @@ mkGUI(char *version)
 	Widget cur_w;
 	Widget skymap_w;
 	Widget logo_w;
-	Widget cam_w;
 	Widget ctrl_w;
 	Widget status_w;
 	Widget dome_w;
@@ -199,20 +194,11 @@ mkGUI(char *version)
 	    XmNrightAttachment, XmATTACH_FORM,
 	    NULL);
 
-	    cam_w = mkCamera(hf_w);
-	    XtVaSetValues (cam_w,
-		XmNtopAttachment, XmATTACH_FORM,
-		XmNleftAttachment, XmATTACH_FORM,
-		XmNbottomAttachment, XmATTACH_FORM,
-		NULL);
-
 	    ctrl_w = mkControl(hf_w);
 	    XtVaSetValues (ctrl_w,
 		XmNtopAttachment, XmATTACH_FORM,
 		XmNbottomAttachment, XmATTACH_FORM,
-		XmNleftAttachment, XmATTACH_WIDGET,
-		XmNleftWidget, cam_w,
-		XmNleftOffset, 10,
+		XmNleftAttachment, XmATTACH_FORM,
 		NULL);
 
 	    scope_w = mkScope(hf_w);
@@ -259,47 +245,6 @@ mkGUI(char *version)
 	    XmNleftAttachment, XmATTACH_FORM,
 	    XmNrightAttachment, XmATTACH_FORM,
 	    NULL);
-}
-
-/* if have filter, fill in the filter menu to match filtinfo.
- * N.B. this does *not* set the menuHistory or the cascade button.
- */
-void
-fillFilterMenu()
-{
-	Widget pd_w = g_w[CFIPD_W];
-	Cardinal numChildren;
-	WidgetList children;
-	int i;
-
-	/* just shut off if no filter wheel */
-	if (!IMOT->have) {
-	    wlprintf (g_w[CFICB_W], "    ");
-	    XtSetSensitive (g_w[CFICB_W], 0);
-	    return;
-	}
-	XtSetSensitive (g_w[CFICB_W], 1);
-
-	/* get current set of PBs in menu */
-	XtVaGetValues (pd_w,
-	    XmNnumChildren, &numChildren,
-	    XmNchildren, &children,
-	    NULL);
-
-	/* need nfilt managed PBs: make more or turn off excess */
-	for (i = 0; i < nfilt; i++) {
-	    Widget w;
-	    if (i < numChildren) {
-		w = children[i];
-	    } else {
-		w = XmCreatePushButton (pd_w, "FPB", NULL, 0);
-		XtAddCallback (w, XmNactivateCallback, filterCB, NULL);
-	    }
-	    wlprintf (w, "%s", filtinfo[i].name);
-	    XtManageChild (w);
-	}
-	while (i < numChildren)
-	    XtUnmanageChild (children[i++]);
 }
 
 void
@@ -437,7 +382,6 @@ void
 guiSensitive (int whether)
 {
 	static Widget *batch_wp[] = {
-	    &g_w[CFIPD_W],
 	    &g_w[TSERV_W],
 	    &g_w[TSTOW_W],
 	    &g_w[TGOTO_W],
@@ -449,8 +393,6 @@ guiSensitive (int whether)
 	    &g_w[CPADDLE_W],
 	    &g_w[CCNFOFF_W],
 	    &g_w[CCNFOFF_W],
-	    &g_w[CL1_W],
-	    &g_w[CL2_W],
 	};
 	int i;
 
@@ -468,28 +410,6 @@ guiSensitive (int whether)
 	}
 
 	/* dome sensitivity is left up to updateStatus() */
-}
-
-void showEngmode () {
-  static int lastmode = -1;
-
-  int curmode;
-
-  curmode = telstatshmp->engmode;
-
-  if(curmode == lastmode)
-    return;
-
-  if(!curmode) {
-    limits_sensitive = XtIsSensitive(g_w[CFLIM_W]);
-    calib_sensitive = XtIsSensitive(g_w[CCALIBA_W]);
-    XtSetSensitive(g_w[CFLIM_W], 0);
-    XtSetSensitive(g_w[CCALIBA_W], 0);
-  }
-  else {
-    XtSetSensitive(g_w[CFLIM_W], 1);
-    XtSetSensitive(g_w[CCALIBA_W], 1);
-  }
 }
 
 /* callback for the logo drawing area expose */
@@ -654,138 +574,6 @@ mkCurrent(Widget main_w)
 	g_w[PDALT_W] = l_w[4];
 	g_w[PDAZ_W] = l_w[5];
 	g_w[PDDAZ_W] = l_w[6];
-
-	return (fr_w);
-}
-
-static Widget
-mkCamera(Widget main_w)
-{
-	Widget fr_w, f_w;
-	Widget da_w;
-	Widget tbl_w;
-	Widget l_w, tf_w;
-	Widget fof_w, fmb_w;
-	Widget lgt_w;
-	Widget w;
-
-	mkFrame (main_w, "Camera", "Camera", &fr_w, &f_w);
-
-	tbl_w = XtVaCreateManagedWidget ("CRC", xmRowColumnWidgetClass, f_w,
-	    XmNtopAttachment, XmATTACH_FORM,
-	    XmNbottomAttachment, XmATTACH_FORM,
-	    XmNleftAttachment, XmATTACH_FORM,
-	    XmNrightAttachment, XmATTACH_FORM,
-	    XmNnumColumns, 1,
-	    XmNpacking, XmPACK_TIGHT,
-	    NULL);
-
-	fof_w = XtVaCreateManagedWidget ("FOF", xmFormWidgetClass, tbl_w,
-	    NULL);
-
-	    g_w[CFILT_W] = mkLight (fof_w);
-	    XtVaSetValues (g_w[CFILT_W],
-		XmNtopAttachment, XmATTACH_FORM,
-		XmNbottomAttachment, XmATTACH_FORM,
-		XmNrightAttachment, XmATTACH_FORM,
-		XmNforeground, getColor (toplevel_w, "green"),
-		NULL);
-
-	    fmb_w = mkFilterOp (fof_w);
-	    XtVaSetValues (fmb_w,
-		XmNtopAttachment, XmATTACH_FORM,
-		XmNbottomAttachment, XmATTACH_FORM,
-		XmNrightAttachment, XmATTACH_WIDGET,
-		XmNrightWidget, g_w[CFILT_W],
-		XmNrightOffset, 10,
-		NULL);
-
-	    fillFilterMenu();
-
-	w = mkPrompt (tbl_w, 8, &l_w, &tf_w, &da_w);
-	wtip (tf_w, "Current focus position, microns from home, +in");
-	wltprintf (prT, l_w, "Focus, %cm", XK_mu);
-	XtVaSetValues (l_w, XmNalignment, XmALIGNMENT_BEGINNING, NULL);
-	XtVaSetValues (tf_w,
-	    XmNbackground, uneditableColor,
-	    XmNcursorPositionVisible, False,
-	    XmNeditable, False,
-	    XmNmaxLength, 8,
-	    XmNmarginHeight, 1,
-	    XmNmarginWidth, 1,
-	    NULL);
-	g_w[CFO_W] = tf_w;
-	g_w[CFOLT_W] = da_w;
-
-	w = mkPrompt (tbl_w, 8, &l_w, &tf_w, &da_w);
-	wtip (tf_w, "Current CCD temperature");
-	wltprintf (prT, l_w, "Temp, %cC", XK_degree);
-	XtVaSetValues (l_w, XmNalignment, XmALIGNMENT_BEGINNING, NULL);
-	XtVaSetValues (tf_w,
-	    XmNbackground, uneditableColor,
-	    XmNcursorPositionVisible, False,
-	    XmNeditable, False,
-	    XmNmarginHeight, 1,
-	    XmNmarginWidth, 1,
-	    NULL);
-	g_w[CT_W] = tf_w;
-	g_w[CTLT_W] = da_w;
-
-	w = mkPrompt (tbl_w, 8, &l_w, &tf_w, &da_w);
-	wtip (tf_w, "Camera cooler status");
-	wltprintf (prT, l_w, "Cooler");
-	XtVaSetValues (l_w, XmNalignment, XmALIGNMENT_BEGINNING, NULL);
-	XtVaSetValues (tf_w,
-	    XmNbackground, uneditableColor,
-	    XmNcursorPositionVisible, False,
-	    XmNeditable, False,
-	    XmNmarginHeight, 1,
-	    XmNmarginWidth, 1,
-	    NULL);
-	g_w[CC_W] = tf_w;
-	g_w[CCLT_W] = da_w;
-
-	w = mkPrompt (tbl_w, 8, &l_w, &tf_w, &da_w);
-	wtip (tf_w, "Camera activity");
-	XtVaSetValues (l_w, XmNalignment, XmALIGNMENT_BEGINNING, NULL);
-	wltprintf (prT, l_w, "Status");
-	XtVaSetValues (tf_w,
-	    XmNbackground, uneditableColor,
-	    XmNcursorPositionVisible, False,
-	    XmNeditable, False,
-	    XmNmarginHeight, 1,
-	    XmNmarginWidth, 1,
-	    NULL);
-	g_w[CS_W] = tf_w;
-	g_w[CSLT_W] = da_w;
-
-	w = mkPrompt (tbl_w, 8, &l_w, &tf_w, &da_w);
-	wtip (tf_w, "Field rotator position angle");
-	XtVaSetValues (l_w, XmNalignment, XmALIGNMENT_BEGINNING, NULL);
-	wltprintf (prT, l_w, "Rotator");
-	XtVaSetValues (tf_w,
-	    XmNbackground, uneditableColor,
-	    XmNcursorPositionVisible, False,
-	    XmNeditable, False,
-	    XmNmarginHeight, 1,
-	    XmNmarginWidth, 1,
-	    NULL);
-	g_w[CR_W] = tf_w;
-	g_w[CRL_W] = l_w;
-	g_w[CRLT_W] = da_w;
-
-	lgt_w = XtVaCreateManagedWidget ("Li", xmFormWidgetClass, tbl_w,
-	    NULL);
-
-	    g_w[CLLT_W] = mkLight (lgt_w);
-	    XtVaSetValues (g_w[CLLT_W],
-		XmNtopAttachment, XmATTACH_FORM,
-		XmNbottomAttachment, XmATTACH_FORM,
-		XmNrightAttachment, XmATTACH_FORM,
-		XmNforeground, getColor (toplevel_w, "gray"),
-		NULL);
-
-	    mkFlatLights (lgt_w, g_w[CLLT_W]);
 
 	return (fr_w);
 }
@@ -1254,7 +1042,7 @@ mkInfo(Widget main_w)
 	Widget fr_w, f_w;
 	Widget lf_w;
 	Widget sep_w;
-	Widget l_w[XtNumber(ctrls)/2];
+	Widget l_w[XtNumber(ctrls)];
 	int i;
 
 	sprintf (site, "Site Information at %s", BANNER);
@@ -1301,41 +1089,6 @@ mkInfo(Widget main_w)
 	    XmNleftAttachment, XmATTACH_FORM,
 	    XmNrightAttachment, XmATTACH_FORM,
 	    NULL);
-
-	lf_w = XtVaCreateManagedWidget ("ILF", xmFormWidgetClass, f_w,
-	    XmNtopAttachment, XmATTACH_WIDGET,
-	    XmNtopWidget, sep_w,
-	    XmNleftAttachment, XmATTACH_FORM,
-	    XmNrightAttachment, XmATTACH_FORM,
-	    NULL);
-	for (i = 0; i < XtNumber(l_w); i++) {
-	    l_w[i] = XtVaCreateManagedWidget ("IL", xmLabelWidgetClass, lf_w,
-		NULL);
-	    wltprintf (prT, l_w[i], "%s", ctrls[XtNumber(l_w)+i]);
-	}
-	mkRow (lf_w, l_w, XtNumber(l_w), 25);
-
-	lf_w = XtVaCreateManagedWidget ("ILF", xmFormWidgetClass, f_w,
-	    XmNtopAttachment, XmATTACH_WIDGET,
-	    XmNtopWidget, lf_w,
-	    XmNleftAttachment, XmATTACH_FORM,
-	    XmNrightAttachment, XmATTACH_FORM,
-	    NULL);
-	for (i = 0; i < XtNumber(l_w); i++) {
-	    l_w[i] = XtVaCreateManagedWidget ("IL", xmTextFieldWidgetClass,lf_w,
-		XmNbackground, uneditableColor,
-		XmNcolumns, 8,
-		XmNcursorPositionVisible, False,
-		XmNeditable, False,
-		XmNmarginHeight, 1,
-		XmNmarginWidth, 1,
-		NULL);
-	    if (ctrls[XtNumber(l_w)+i].wp)
-		*ctrls[XtNumber(l_w)+i].wp = l_w[i];
-	    if (ctrls[XtNumber(l_w)+i].tip)
-		wtip (l_w[i], ctrls[XtNumber(l_w)+i].tip);
-	}
-	mkRow (lf_w, l_w, XtNumber(l_w), 25);
 
 	return (fr_w);
 }
@@ -1505,155 +1258,6 @@ wltprintf (char *tag, Widget w, char *fmt, ...)
 	    XmStringFree (str);
 	}
 	XtFree (txtp);
-}
-
-static void
-filterCB (Widget w, XtPointer client, XtPointer call)
-{
-	char rusmsg[256], buf[128], *str;
-
-	if (!IMOT->have) {
-	    msg ("No filter wheel installed");
-	    return;
-	}
-
-	get_xmstring (w, XmNlabelString, &str);
-	(void) strncpy (buf, str, sizeof(buf));
-	XtFree (str);
-
-	(void) sprintf (rusmsg, "change to the %s filter", buf);
-	if (!rusure (toplevel_w, rusmsg))
-	    return;
-
-	/* tell daemon */
-	msg ("Setting filter to %s", buf);
-	fifoMsg (Filter_Id, "%c", buf[0]);
-
-	/* remember next time */
-	set_something (g_w[CFIPD_W], XmNmenuHistory, (char *)w);
-
-	/* update */
-	updateStatus(1);
-}
-
-/* create a label and menu bar for the filter selection off the fof form.
- * return the mb.
- * tried option menu but the tab thingy wasted too much room.
- */
-static Widget
-mkFilterOp (Widget fof_w)
-{
-	Widget flbl_w, cb_w, fmb_w, pd_w;
-
-	/* create a menu bar just so the cb works */
-	fmb_w = XmCreateMenuBar (fof_w, "CFMB", NULL, 0);
-	XtVaSetValues (fmb_w,
-	    XmNmarginWidth, 0,
-	    XmNmarginHeight, 0,
-	    NULL);
-	XtManageChild (fmb_w);
-
-	/* create the filter option menu, fill in later with fillFilterMenu() */
-	g_w[CFIPD_W] = pd_w = XmCreatePulldownMenu (fmb_w, "CPD", NULL, 0);
-
-	/* create a cascade button for the pd */
-	g_w[CFICB_W] = cb_w = XmCreateCascadeButton (fmb_w, "CFCB", NULL, 0);
-	XtManageChild (cb_w);
-	XtVaSetValues (cb_w,
-	    XmNmarginWidth, 0,
-	    XmNmarginHeight, 0,
-	    XmNsubMenuId, pd_w,
-	    NULL);
-	wtip (cb_w,
-		"Current filter. To change: Press, Select from list, Release");
-
-	/* create a label on the left */
-	flbl_w = XmCreateLabel (fof_w, "FLBL", NULL, 0);
-	XtVaSetValues (flbl_w,
-	    XmNtopAttachment, XmATTACH_FORM,
-	    XmNbottomAttachment, XmATTACH_FORM,
-	    XmNleftAttachment, XmATTACH_FORM,
-	    NULL);
-	XtManageChild (flbl_w);
-	wltprintf (prT, flbl_w, "Filter");
-	g_w[CFIL_W] = flbl_w;
-
-	return (fmb_w);
-}
-
-/* callback from the flat lights tbs.
- * client is button number, 1 or 2
- */
-static void
-flatLtCB (Widget w, XtPointer client, XtPointer call)
-{
-	int set = XmToggleButtonGetState (w);
-	int n = (int)client;
-	int v;
-
-	v = telstatshmp->lights;
-	if (set)
-	    v += n;
-	else
-	    v -= n;
-
-	cli_move_lights();
-	fifoMsg (Lights_Id, "%d", v);
-}
-
-/* create stuff to show and control the dome flat lights */
-static void
-mkFlatLights (Widget form_w, Widget light_w)
-{
-	Widget l_w, tb1_w, tb2_w;
-
-	l_w = XtVaCreateManagedWidget ("Lights", xmLabelWidgetClass, form_w,
-	    XmNtopAttachment, XmATTACH_FORM,
-	    XmNleftAttachment, XmATTACH_FORM,
-	    XmNbottomAttachment, XmATTACH_FORM,
-	    XmNalignment, XmALIGNMENT_BEGINNING,
-	    NULL);
-
-	tb2_w = XtVaCreateManagedWidget ("Lights", xmToggleButtonWidgetClass,
-	    form_w,
-	    XmNtopAttachment, XmATTACH_FORM,
-	    XmNrightAttachment, XmATTACH_WIDGET,
-	    XmNrightWidget, light_w,
-	    XmNrightOffset, 10,
-	    XmNbottomAttachment, XmATTACH_FORM,
-	    XmNalignment, XmALIGNMENT_BEGINNING,
-	    XmNindicatorOn, True,
-	    XmNindicatorType, XmN_OF_MANY,
-	    XmNvisibleWhenOff, True,
-	    XmNmarginHeight, 0,
-	    NULL);
-
-	wltprintf (pbT, tb2_w, "2");
-	XtAddCallback (tb2_w, XmNvalueChangedCallback, flatLtCB, (XtPointer)2);
-	wtip (tb2_w, "Indicates and Controls whether dome flat light #2 is on");
-
-
-	tb1_w = XtVaCreateManagedWidget ("Lights", xmToggleButtonWidgetClass,
-	    form_w,
-	    XmNtopAttachment, XmATTACH_FORM,
-	    XmNrightAttachment, XmATTACH_WIDGET,
-	    XmNrightWidget, tb2_w,
-	    XmNrightOffset, 2,
-	    XmNbottomAttachment, XmATTACH_FORM,
-	    XmNalignment, XmALIGNMENT_BEGINNING,
-	    XmNindicatorOn, True,
-	    XmNindicatorType, XmN_OF_MANY,
-	    XmNvisibleWhenOff, True,
-	    XmNmarginHeight, 0,
-	    NULL);
-
-	wltprintf (pbT, tb1_w, "1");
-	XtAddCallback (tb1_w, XmNvalueChangedCallback, flatLtCB, (XtPointer)1);
-	wtip (tb1_w, "Indicates and Controls whether dome flat light #1 is on");
-
-	g_w[CL1_W] = tb1_w;
-	g_w[CL2_W] = tb2_w;
-	g_w[CL_W] = l_w;
 }
 
 static void

@@ -1239,9 +1239,6 @@ static int check_tellimits(void) {
   char str[64];
   int rv = 1;
 
-  if(telstatshmp->engmode)
-    return(1);  /* engineering override */
-
   if(telstatshmp->Calt <= telstatshmp->negaltlimdc) {
     fs_sexa(str, raddeg(telstatshmp->Calt), 4, 3600);
     fifoWrite(Dome_Id, -2, "%s hits negative altitude limit inside dome", str);

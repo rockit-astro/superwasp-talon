@@ -142,9 +142,6 @@ resetSW()
 	fifoMsg (Filter_Id, "Reset");
 	fifoMsg (Focus_Id, "Reset");
 	fifoMsg (Lights_Id, "Reset");
-
-	/* keep up with filter assignments */
-	fillFilterMenu();
 }
 
 /* shut down all activity */

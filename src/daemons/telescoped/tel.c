@@ -90,43 +90,7 @@ static double d_offset;		/* delta dec to be added */
 #define	MAXJITTER	10.0	/* max clock vs host difference */
 static double strack;		/* when current e/mtrack started */
 
-/* Rastering stuff, jmi June 2004 */
-#define RASTER_STOP   0
-#define RASTER_DIR_N  1
-#define RASTER_DIR_E  2
-#define RASTER_DIR_S  3
-#define RASTER_DIR_W  4
-
-static void tel_raster_enable (int on, double size);
-static void tel_raster_start (double exp);
-static void tel_raster_stop (void);
-static void tel_raster_reset (void);
-static void tel_raster_update (void);
-
-static void tel_engmode (int on);
-
 int tel_ishomed (void);
-
-static CamState lastcamstate;
-
-static double RASTER_MINVEL;    /* minimum raster velocity, rads/sec */
-static double RASTER_MAXVEL;    /* maximum raster velocity, rads/sec */
-
-static double raster_vel;       /* rastering velocity, rads/sec */
-static int raster_pdir;         /* raster previous direction */
-static int raster_rdir;         /* raster current direction // ra */
-static int raster_ddir;         /* raster current direction // dec */
-static double raster_dmjd;      /* last MJD of direction change */
-static double raster_lmjd;      /* last MJD of rastering update */
-static double raster_targtime;  /* target time of next update */
-static int raster_step;         /* current rastering step */
-static int raster_nstep;        /* number of rastering steps */
-static double raster_pixtime;   /* time to traverse pixel */
-static double raster_deltat;    /* time to make RA step */
-static double raster_hoff;      /* raster HA offset */
-static double raster_doff;      /* raster Dec offset */
-static double raster_hvel;      /* raster HA velocity */
-static double raster_dvel;      /* raster Dec velocity */
 
 static double jog_hvel;         /* jog HA velocity */
 static double jog_dvel;         /* jog Dec velocity */
@@ -174,10 +138,6 @@ char *msg;
 	    tel_jog (1, jog_dir);
 	else if (sscanf (msg, "Offset %lf,%lf", &a, &b) == 2)
 	    offsetTracking (1, a, b, 1);
-        else if (sscanf (msg, "raster %d %lf", &i, &a) == 2)
-	    tel_raster_enable(i, a);
-        else if (sscanf (msg, "engmode %d", &i) == 1)
-	    tel_engmode(i);
 	else {
 	    /* User-issued stop */
 	    tel_stop(1);
@@ -204,8 +164,6 @@ tel_poll()
 	    mkCook();
 	    dummyTarg();
 	}
-
-	tel_raster_update();
 }
 
 /* stop and reread config files */
@@ -490,7 +448,6 @@ tel_radecep (int first, ...)
 	    telstatshmp->jogging_ison = 0;
 	    jog_hvel = 0.0;
 	    jog_dvel = 0.0;
-	    tel_raster_reset();
 	    r_offset = d_offset = 0;
 
 	    obj_cir (np, op);	/* just for sayWhere */
@@ -535,7 +492,6 @@ tel_radeceod (int first, ...)
 	    telstatshmp->jogging_ison = 0;
 	    jog_hvel = 0.0;
 	    jog_dvel = 0.0;
-	    tel_raster_reset();
 	    r_offset = d_offset = 0;
 
 	    obj_cir (np, op);	/* just for sayWhere */
@@ -570,7 +526,6 @@ tel_op (int first, ...)
 	    telstatshmp->jogging_ison = 0;
 	    jog_hvel = 0.0;
 	    jog_dvel = 0.0;
-	    tel_raster_reset();
 
 	    obj_cir (np, op);	/* just for sayWhere */
 	    toTTS ("The telescope is slewing towards %s, %s.", op->o_name,
@@ -605,7 +560,6 @@ tel_altaz (int first, ...)
 	    telstatshmp->jogging_ison = 0;
 	    jog_hvel = 0.0;
 	    jog_dvel = 0.0;
-	    tel_raster_reset();
 	    r_offset = d_offset = 0;
 	    hd2xyr (ha, dec, &x, &y, &r);
 	    if (chkLimits (1, &x, &y, &r) < 0) {
@@ -708,7 +662,6 @@ tel_hadec (int first, ...)
 	    telstatshmp->jogging_ison = 0;
 	    jog_hvel = 0.0;
 	    jog_dvel = 0.0;
-	    tel_raster_reset();
 	    r_offset = d_offset = 0;
 	    hd2xyr (ha, dec, &x, &y, &r);
 	    if (chkLimits (1, &x, &y, &r) < 0) {
@@ -1278,7 +1231,6 @@ stopTel(int fast)
 	telstatshmp->jogging_ison = 0;
 	jog_hvel = 0.0;
 	jog_dvel = 0.0;
-	tel_raster_reset();
 	telstatshmp->telstate = TS_STOPPED;	/* well, soon anyway */
 }
 
@@ -1385,7 +1337,7 @@ chkLimits (int wrapok, double *xp, double *yp, double *rp)
 
 	/* Check if inside dome */
 	if(!(telstatshmp->shutterstate == SH_OPEN ||
-	     telstatshmp->shutterstate == SH_ABSENT) && !telstatshmp->engmode) {
+	     telstatshmp->shutterstate == SH_ABSENT)) {
 	  /* Yep, truncate at dome limits first */
 	  xyr2altaz(*xp, *yp, *rp, &alt, &az);
 
@@ -1470,7 +1422,7 @@ static int chkDomeLimits (void) {
   double delta_alt, delta_az;
 
   if(telstatshmp->shutterstate == SH_OPEN ||
-     telstatshmp->shutterstate == SH_ABSENT || telstatshmp->engmode) {
+     telstatshmp->shutterstate == SH_ABSENT) {
     /* Store alt / az for next time */
     last_alt = telstatshmp->Calt;
     last_az = telstatshmp->Caz;
@@ -1589,15 +1541,9 @@ static void trackAdjustAxis (MotorInfo *mip, double gvel, char *name) {
 }
 
 static void trackUpdateVel (void) {
-  double hvel, dvel;
-
-  /* Velocity is sum of jogging and rastering velocity */
-  hvel = raster_hvel + jog_hvel;
-  dvel = raster_dvel + jog_dvel;
-
   /* Adjust speeds */
-  trackAdjustAxis(HMOT, hvel, "HA");
-  trackAdjustAxis(DMOT, dvel, "Dec");
+  trackAdjustAxis(HMOT, jog_hvel, "HA");
+  trackAdjustAxis(DMOT, jog_dvel, "Dec");
 }
 
 /* called when get a j* command while in any state other than TRACKING.
@@ -1629,7 +1575,6 @@ jogSlew (int first, char dircode)
 	    telstatshmp->jogging_ison = 0;
 	    jog_hvel = 0.0;
 	    jog_dvel = 0.0;
-	    tel_raster_reset();
 	    return;
 	}
 
@@ -1686,7 +1631,6 @@ offsetTracking (int first, double harcsecs, double darcsecs, int report)
 	telstatshmp->jogging_ison = 1;
 	jog_hvel = 0.0;
 	jog_dvel = 0.0;
-	tel_raster_reset();
 	
 	if(report)
     fifoWrite (Tel_Id, 0, "Tracking offset by %3.3f x %3.3f arcseconds (%ld x %ld steps)",
@@ -1712,9 +1656,6 @@ initCfg()
 
 	static int GERMEQ;
 	static int ZENFLIP;
-
-	static int RASTER_ON;
-	static double DEF_RASTER_SIZE;
 
 	static CfgEntry tdcfg[] = {
 	    {"HHAVE",		CFG_INT, &HHAVE},
@@ -1756,10 +1697,6 @@ initCfg()
 	    {"ACQUIREDELT", 	CFG_DBL, &ACQUIREDELT},
 	    {"FGUIDEVEL", 	CFG_DBL, &FGUIDEVEL},
 	    {"CGUIDEVEL", 	CFG_DBL, &CGUIDEVEL},
-	    {"RASTER_ON",      	CFG_INT, &RASTER_ON},
-	    {"RASTER_SIZE", 	CFG_DBL, &DEF_RASTER_SIZE},
-	    {"RASTER_MINVEL", 	CFG_DBL, &RASTER_MINVEL},
-	    {"RASTER_MAXVEL", 	CFG_DBL, &RASTER_MAXVEL},
 	};
 
  	static double HT, DT, XP, YC, NP, R0;
@@ -1972,13 +1909,6 @@ initCfg()
 
 	telstatshmp->dt = 100;		/* not critical */
 
-	/* Reset rastering variables */
-	lastcamstate = CAM_IDLE;
-	telstatshmp->raster_on = RASTER_ON;
-	telstatshmp->raster_size = DEF_RASTER_SIZE;
-	telstatshmp->raster_going = 0;
-	tel_raster_reset();
-
 	/* Set alt/az limits inside dome */
 	telstatshmp->negaltlimdc = NEGALTLIMDC;
 	telstatshmp->posaltlimdc = POSALTLIMDC;
@@ -2037,266 +1967,6 @@ sayWhere (double alt, double az)
 	strcat (w, cardDirLName(az));
 
 	return (w);
-}
-
-/* Rastering stuff, jmi June 2004 */
-
-static void tel_raster_enable (int on, double size) {
-
-  /* Check on parameter */
-  if(on == 1)
-    telstatshmp->raster_on = 1;
-  else if(on == 0)
-    telstatshmp->raster_on = 0;
-  else if(on == -1)
-    /* OK */
-    ;
-  else {
-    fifoWrite(Tel_Id, -1, "Raster on parameter should be -1, 1 or 0, got %d", on);
-    return;
-  }
-
-  /* Check size parameter */
-  if(size > 0)
-    telstatshmp->raster_size = size;
-
-  /* Print messages */
-  if(telstatshmp->raster_on)
-    fifoWrite(Tel_Id, 0, "Rastering enabled, size %.1lf arcsec", telstatshmp->raster_size);
-  else
-    fifoWrite(Tel_Id, 0, "Rastering disabled, size %.1lf arcsec", telstatshmp->raster_size);
-}
-
-static void tel_raster_start (double exp) {
-  double rsize, pixtimemin, pixtimemax, pixtime, rdeltat, dvel;
-  int nrstepmin, nrstepmax, nrstep;
-
-  if(!telstatshmp->raster_on)
-    return;
-
-  /* Check exposure parameter */
-  if(exp <= 0) {
-    tdlog("Invalid exposure time: %lf\n", exp);
-    return;
-  }
-
-  tdlog("tel_raster_start: exposure %.1lf seconds\n", exp);
-
-  /* Check telescope state */
-  if(telstatshmp->telstate != TS_TRACKING) {
-    tdlog("Telescope must be tracking to raster\n");
-    return;
-  }
-
-  /* Calculate pixel size in rads */
-  rsize = telstatshmp->raster_size * M_PI / (3600.0 * 180.0);
-
-  /* Calculate time to traverse pixel */
-  pixtimemin = rsize / RASTER_MAXVEL;
-  pixtimemax = rsize / RASTER_MINVEL;
-
-  /* Calculate number of raster steps at min,max velocity */
-  nrstepmin = (int) ((exp - pixtimemax) / (2 * pixtimemax));
-  nrstepmax = (int) ((exp - pixtimemin) / (2 * pixtimemin));
-
-  if(nrstepmax < 1) {
-    /* Can't do it */
-    tdlog("Rastering disabled, exposure of %.1f seconds too short\n", exp);
-    return;
-  }
-
-  nrstep = 2;  /* try for 2 steps */
-
-  if(nrstep < nrstepmin)
-    nrstep = nrstepmin;
-  if(nrstep > nrstepmax)
-    nrstep = nrstepmax;
-
-  /* Calculate desired pixtime */
-  pixtime = exp / (2 * nrstep + 1);
-
-  /* Calculate desired velocity */
-  dvel = rsize / pixtime;
-
-  tdlog("Selected velocity = %f", dvel);
-
-  /* Time taken for each movement West */
-  rdeltat = pixtime / (2*nrstep);
-
-  /* Start */
-  telstatshmp->raster_going = 1;
-  raster_vel = dvel;
-  raster_pdir = RASTER_STOP;
-  raster_rdir = RASTER_DIR_W;
-  raster_ddir = RASTER_DIR_N;
-  raster_lmjd = telstatshmp->now.n_mjd;
-  raster_dmjd = raster_lmjd;
-  raster_targtime = pixtime / SPD;
-  raster_step = 0;
-  raster_nstep = nrstep;
-  raster_pixtime = pixtime / SPD;
-  raster_deltat = rdeltat / SPD;
-
-  raster_hoff = 0.0;
-  raster_doff = 0.0;
-  raster_hvel = 0.0;
-  raster_dvel = raster_vel;
-
-  trackUpdateVel();
-
-  tdlog("Rastering started, %d steps of %.1f seconds in RA, %.1f seconds in Dec",
-	nrstep, rdeltat, pixtime);
-}
-
-static void tel_raster_stop (void) {
-
-  /* Are we actually rastering? */
-  if(!telstatshmp->raster_going)
-    return;
-
-  /* Stop */
-  tel_raster_reset();
-  trackUpdateVel();
-
-  tdlog("Rastering stopped, returning to original position");
-  
-  /* Send the telescope back to the initial position */ 
-  offsetTracking(1, 0, 0, 0);
-}
-
-static void tel_raster_reset (void) {
-  telstatshmp->raster_going = 0;
-  raster_vel = 0.0;
-  raster_pdir = RASTER_STOP;
-  raster_rdir = RASTER_STOP;
-  raster_ddir = RASTER_STOP;
-  raster_lmjd = 0.0;
-  raster_dmjd = 0.0;
-  raster_targtime = 0.0;
-  raster_step = 0;
-  raster_nstep = 0;
-  raster_pixtime = 0.0;
-  raster_deltat = 0.0;
-
-  raster_hoff = 0.0;
-  raster_doff = 0.0;
-  raster_hvel = 0.0;
-  raster_dvel = 0.0;
-}
-
-static void tel_raster_update (void) {
-  double dt, polldt;
-  Now *np;
-  CamState curcamstate;
-  double exptime;
-
-  /* Check camera state */
-  curcamstate = telstatshmp->camstate;
-  exptime = telstatshmp->camexptime;
-  if(curcamstate != lastcamstate) {
-    /* State change, what happened? */
-    if(curcamstate == CAM_EXPO) {
-      /* Exposure started */
-      if(telstatshmp->raster_going)
-	tel_raster_reset();
-
-      lastcamstate = curcamstate;
-
-      tel_raster_start(exptime);
-      return;
-    }
-    else if(lastcamstate == CAM_EXPO) {
-      /* Exposure finished */
-      if(telstatshmp->raster_going)
-	tel_raster_stop();
-
-      lastcamstate = curcamstate;
-      return;
-    }
-
-    lastcamstate = curcamstate;
-  }
-
-  if(!telstatshmp->raster_going)
-    return;
-
-  np = &telstatshmp->now;
-  polldt = 2.0 / (SPD * ((double) HZ));
-
-  /* Do we need to change direction within the next polling interval? */
-  dt = (mjd - raster_dmjd);
-  
-  if(dt + polldt > raster_targtime) {
-    /* Yes: change direction now */
-    if(raster_ddir == RASTER_DIR_S) {
-      raster_step++;
-      if(raster_step >= raster_nstep) {
-	/* Turn back */
-	raster_rdir = (raster_rdir == RASTER_DIR_W ? RASTER_DIR_E : RASTER_DIR_W);
-	raster_step = 0;
-      }
-    }
-    
-    if(raster_ddir == RASTER_DIR_N || raster_ddir == RASTER_DIR_S) {
-      raster_pdir = raster_ddir;
-      raster_ddir = raster_rdir;
-      raster_targtime = raster_deltat;
-    }
-    else {
-      /* West */
-      raster_ddir = (raster_pdir == RASTER_DIR_N ? RASTER_DIR_S : RASTER_DIR_N);
-      raster_pdir = raster_rdir;
-      raster_targtime = raster_pixtime;
-    }
-
-    switch(raster_ddir) {
-    case RASTER_DIR_N:
-      raster_hvel = 0.0;
-      raster_dvel = raster_vel;
-      break;
-    case RASTER_DIR_E:
-      raster_hvel = raster_vel;
-      raster_dvel = 0.0;
-      break;
-    case RASTER_DIR_S:
-      raster_hvel = 0.0;
-      raster_dvel = -raster_vel;
-      break;
-    case RASTER_DIR_W:
-      raster_hvel = -raster_vel;
-      raster_dvel = 0.0;
-      break;
-    default:
-      raster_hvel = 0.0;
-      raster_dvel = 0.0;
-      break;
-    }
-
-    tdlog("changing dir to %d", raster_ddir);
-
-    /* Update motor velocities */
-    trackUpdateVel();
-
-    raster_dmjd = mjd;
-  }
-  
-  /* Update offsets */
-  dt = (mjd - raster_lmjd) * SPD;
-  raster_lmjd = mjd;
-  
-  raster_hoff += raster_hvel * dt;
-  raster_doff += raster_dvel * dt;
-}
-
-static void tel_engmode (int on) {
-
-  /* Print messages */
-  if(on)
-    fifoWrite(Tel_Id, 0, "Engineering mode on, limits disabled");
-  else
-    fifoWrite(Tel_Id, 0, "Engineering mode off, limits enabled");
-
-  telstatshmp->engmode = on;
 }
 
 int tel_ishomed (void) {

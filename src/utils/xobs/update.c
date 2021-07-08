@@ -37,9 +37,6 @@ static void noTarg (void);
 static void computeSunMoon(void);
 static void showTime (void);
 static void showSunMoon (void);
-static void showFilter(void);
-static void showFocus(void);
-static void showCamera(void);
 static void showScope(void);
 static void showHL(void);
 static void showDome(void);
@@ -81,7 +78,6 @@ updateStatus(int force)
 	if (dofast) {
 	    showTime();
 	    batchUpdate();
-	    showCamera();
 	    last_fast = mjd;
 	}
 
@@ -102,22 +98,11 @@ updateStatus(int force)
 		last_dbusy = mjd;
 	}
 
-	busy = OMOT->cvel != 0;
-	if (doslow || busy || mjd < last_obusy + COAST_DT) {
-	    showFocus();
-	    if (busy)
-		last_obusy = mjd;
-	}
-
 	busy = IMOT->cvel != 0;
 	if (doslow || busy || mjd < last_ibusy + COAST_DT) {
-	    showFilter();
 	    if (busy)
 		last_ibusy = mjd;
 	}
-
-	if (doslow)
-	    showEngmode();
 
 	/* always be very responsive to the scope */
 	showScope();
@@ -127,7 +112,6 @@ updateStatus(int force)
 static void
 curPos ()
 {
-	static int last_haver = -1;
 	char buf[32];
 
 	fs_sexa (buf, radhr(telstatshmp->CJ2kRA), 2, 36000);
@@ -144,25 +128,6 @@ curPos ()
 
 	fs_sexa (buf, raddeg(telstatshmp->Caz), 4, 3600);
 	wtprintf (g_w[PCAZ_W], "%s", buf);
-
-	/* even have a rotator? */
-	if (RMOT->have != last_haver) {
-	    if (RMOT->have) {
-		XtSetSensitive (g_w[CRL_W], True);
-		XtSetSensitive (g_w[CR_W], True);
-	    } else {
-		XtSetSensitive (g_w[CRL_W], False);
-		XtSetSensitive (g_w[CR_W], False);
-		setLt (g_w[CRLT_W], LTIDLE);
-	    }
-	    last_haver = RMOT->have;
-	}
-
-	if (RMOT->have) {
-	    double r = RMOT->cpos + telstatshmp->tax.R0;
-	    fs_sexa (buf, raddeg(r), 3, 60);
-	    wtprintf (g_w[CR_W], "%8s", buf);
-	}
 }
 
 static void
@@ -174,7 +139,6 @@ noPos ()
 	wtprintf (g_w[PCALT_W], blank);
 	wtprintf (g_w[PCAZ_W], blank);
 	wtprintf (g_w[PCDAZ_W], blank);
-	wtprintf (g_w[CR_W], blank);
 }
 
 static void
@@ -323,146 +287,6 @@ showSunMoon ()
 }
 
 static void
-showFilter()
-{
-	char curf;
-
-	if (!IMOT->have)
-	    return;
-
-	curf = telstatshmp->filter;
-
-	if (curf == '<' || curf == '>' || IMOT->cvel != 0) {
-	    /* busy */
-	    setLt (g_w[CFILT_W], LTACTIVE);
-	    return;
-	} else {
-	    /* show name matching curf */
-	    int i;
-
-	    for (i = 0; i < nfilt; i++) {
-		if (filtinfo[i].name[0] == curf) {
-		    wlprintf (g_w[CFICB_W], filtinfo[i].name);
-		    setLt (g_w[CFILT_W], LTOK);
-		    return;
-		}
-	    }
-	}
-
-	/* trouble if get here */
-	setLt (g_w[CFILT_W], LTWARN);
-}
-
-static void
-showFocus()
-{
-	double tmp;
-
-	if (!OMOT->have)
-	    return;
-
-	/* show microns from home */
-	tmp = OMOT->step*OMOT->cpos/OMOT->focscale/(2*PI);
-	wtprintf (g_w[CFO_W], "%8.1f", tmp);
-
-	/* show status */
-	if (OMOT->cvel != 0)
-	    setLt (g_w[CFOLT_W], LTACTIVE);
-	else {
-	    /* ok if within 1 step */
-	    tmp = OMOT->step*(OMOT->cpos - OMOT->dpos)/(2*PI);
-	    setLt (g_w[CFOLT_W], fabs(tmp) < 1.5 ? LTOK : LTWARN);
-	}
-}
-
-static void
-showCamera()
-{
-	static int last_maxflint = -1;
-	LtState camlt;
-	Widget w;
-	int i;
-
-	w = g_w[CS_W];
-	switch (telstatshmp->camstate) {
-	case CAM_IDLE: wtprintf(w,"    IDLE");  camlt = LTIDLE;    break;
-	case CAM_EXPO: wtprintf(w,"EXPOSING");  camlt = LTACTIVE;  break;
-	case CAM_READ: wtprintf(w," READING");  camlt = LTACTIVE;  break;
-	default:				camlt = LTWARN;	   break;
-	}
-	setLt (g_w[CSLT_W], camlt);
-
-	wtprintf (g_w[CT_W], "%8d", telstatshmp->camtemp);
-
-	w = g_w[CC_W];
-	switch (telstatshmp->coolerstatus) {
-	case CCDTS_AT:   wtprintf(w," At Targ"); camlt = LTOK;     break;
-	case CCDTS_UNDER:wtprintf(w,"  < Targ"); camlt = LTWARN;   break;
-	case CCDTS_OVER: wtprintf(w,"  > Targ"); camlt = LTWARN;   break;
-	case CCDTS_OFF:  wtprintf(w,"     Off"); camlt = LTIDLE;   break;
-	case CCDTS_RDN:  wtprintf(w," Ramping"); camlt = LTACTIVE; break;
-	case CCDTS_RUP:  wtprintf(w,"  To Amb"); camlt = LTACTIVE; break;
-	case CCDTS_STUCK:wtprintf(w," Ceiling"); camlt = LTWARN;   break;
-	case CCDTS_MAX:  wtprintf(w,"   Floor"); camlt = LTWARN;   break;
-	case CCDTS_AMB:  wtprintf(w,"  At Amb"); camlt = LTIDLE;   break;
-	case CCDTS_ERR: /* FALLTHRU */
-	default:         wtprintf(w,"   Error"); camlt = LTWARN;   break;
-	    break;
-	}
-
-	setLt (g_w[CCLT_W], camlt);
-
-	switch (telstatshmp->coolerstatus) {
-	case CCDTS_OFF:	/* FALLTHRU */
-	case CCDTS_RUP:	/* FALLTHRU */
-	case CCDTS_AMB:
-	    camlt = LTIDLE;
-	    break;
-	default:
-	    i = abs (telstatshmp->camtarg - telstatshmp->camtemp);
-	    if (i == 0)
-		camlt = LTOK;
-	    else if (i <= MAXTEMPERR)
-		camlt = LTACTIVE;
-	    else
-		camlt = LTWARN;
-	    break;
-	}
-	setLt (g_w[CTLT_W], camlt);
-
-	/* even have dome flat lights? */
-	if (MAXFLINT != last_maxflint) {
-	    /* label depends only on whether, TB's depend on passive too */
-	    if (MAXFLINT > 0) {
-		XtSetSensitive (g_w[CL_W], True);
-		XtSetSensitive (g_w[CL1_W], xobs_alone);
-		XtSetSensitive (g_w[CL2_W], MAXFLINT > 1 && xobs_alone);
-	    } else {
-		XtSetSensitive (g_w[CL_W], False);
-		XtSetSensitive (g_w[CL1_W], False);
-		XtSetSensitive (g_w[CL2_W], False);
-	    }
-
-	    last_maxflint = MAXFLINT;
-	}
-
-	i = telstatshmp->lights;
-	if (i >= 0) {
-	    int now;
-
-	    now = XmToggleButtonGetState (g_w[CL1_W]);
-	    if (!!now != !!(i&1))
-		XmToggleButtonSetState (g_w[CL1_W], !now, False);
-
-	    now = XmToggleButtonGetState (g_w[CL2_W]);
-	    if (!!now != !!(i&2))
-		XmToggleButtonSetState (g_w[CL2_W], !now, False);
-	}
-
-	setLt (g_w[CLLT_W], i <= 0 ? LTIDLE : LTACTIVE);
-}
-
-static void
 showScope()
 {
 	/* batch status */
@@ -477,46 +301,36 @@ showScope()
 	switch (telstatshmp->telstate) {
 	case TS_STOPPED:
 	    setLt(g_w[STLT_W],LTIDLE); setLt(g_w[SSLT_W],LTIDLE);
-	    setLt (g_w[CRLT_W], LTIDLE);
 	    curPos();
 	    noTarg();
 	    break;
 
 	case TS_SLEWING:
 	    setLt(g_w[STLT_W],LTIDLE); setLt(g_w[SSLT_W],LTOK);
-	    if (RMOT->have)
-		setLt (g_w[CRLT_W], RMOT->cvel ? LTACTIVE : LTOK);
 	    curPos();
 	    curTarg();
 	    break;
 
 	case TS_HUNTING:
 	    setLt(g_w[STLT_W],LTACTIVE); setLt(g_w[SSLT_W],LTOK);
-	    if (RMOT->have)
-		setLt (g_w[CRLT_W], RMOT->cvel ? LTACTIVE : LTOK);
 	    curPos();
 	    curTarg();
 	    break;
 
 	case TS_TRACKING:
 	    setLt(g_w[STLT_W],LTOK); setLt(g_w[SSLT_W],LTIDLE);
-	    if (RMOT->have) setLt (g_w[CRLT_W], LTOK);
 	    curPos();
 	    curTarg();
 	    break;
 
 	case TS_HOMING:
 	    setLt(g_w[STLT_W],LTIDLE); setLt(g_w[SSLT_W],LTIDLE);
-	    if (RMOT->have)
-		setLt (g_w[CRLT_W], RMOT->cvel ? LTACTIVE : LTOK);
 	    noPos();
 	    noTarg();
 	    break;
 
 	case TS_LIMITING:
 	    setLt(g_w[STLT_W],LTIDLE); setLt(g_w[SSLT_W],LTIDLE);
-	    if (RMOT->have)
-		setLt (g_w[CRLT_W], RMOT->cvel ? LTACTIVE : LTOK);
 	    curPos();
 	    noTarg();
 	    break;
