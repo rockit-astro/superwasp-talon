@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.0)
+cmake_minimum_required (VERSION 2.8)
 project (csimc)
 
 set(CSIMC_SRC csimc.c boot.c eintrio.c el.c)

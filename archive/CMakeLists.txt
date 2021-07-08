@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.0)
+cmake_minimum_required (VERSION 2.8)
 project (archive)
 
 set(ARCHIVE_DIR ${CORE_INSTALL_DIR}/archive)

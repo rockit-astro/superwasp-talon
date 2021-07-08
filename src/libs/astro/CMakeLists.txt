@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.0)
+cmake_minimum_required (VERSION 2.8)
 project (astro)
 
 set(ASTRO_SRC aa_hadec.c airmass.c auxil.c circum.c deep.c eq_ecl.c
