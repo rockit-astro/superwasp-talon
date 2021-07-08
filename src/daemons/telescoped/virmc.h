@@ -8,13 +8,15 @@
 #define mAbs(v)  ((v) < 0 ? -(v) : (v))
 #define absclamp(v,m) (v = (mAbs(v) < (m) ? (v) : (v) < 0 ? -(m) : (m)))
 
-#define NNODES	8		// enough to do stuff with...
+#define NVNODES	8		// enough to do stuff with...
 
 #define	HOMEBIT 1
 #define PLIMBIT 2
 #define NLIMBIT 4
 
+#ifndef PI
 #define PI	3.1415
+#endif
 
 // Define a structure for a "node"
 typedef struct

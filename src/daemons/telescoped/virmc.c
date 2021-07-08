@@ -50,9 +50,9 @@ static void roofseeker(int node);
 
 // local variables
 static int everBeenInit = 0; // a sanity "been init at least once" flag
-static VCNode vmcNode[NNODES];
+static VCNode vmcNode[NVNODES];
 typedef void (*ActFunc)(int);
-static ActFunc active_func[NNODES];
+static ActFunc active_func[NVNODES];
 
 // Main service loop.  This is called at each iteration of tel_poll
 // If we are tracking, vmcTrackProgram is executed to keep target current
@@ -457,7 +457,7 @@ if(pvc == &vmcNode[2])
 //
 // ---------------------------------------------------------------------------------
 
-char vmcResponse[NNODES][256];
+char vmcResponse[NVNODES][256];
 
 static char *oReadcmd(char *str)
 {
