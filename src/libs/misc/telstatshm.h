@@ -77,7 +77,6 @@ typedef enum {
     TEL_DM,			/* latitudinal motor, "dec" or "alt" */
     TEL_RM,			/* field rotator motor */
     TEL_OM,			/* focus motor */
-    TEL_IM,			/* filter wheel motor */
     TEL_NM			/* total number of potential motors */
 } MotorId;			/* index into minfo[] */
 
@@ -134,7 +133,6 @@ typedef struct {
 
     /* various status indicators */
     TelState telstate;		/* telescope state */
-    char filter;		/* current filter, or < or > if moving */
     int jogging_ison : 1;	/* currently jogged/jogging from target */
     DShState shutterstate;	/* shutter state */
 
@@ -146,29 +144,23 @@ typedef struct {
 #define	FOCUS_READY	(!telstatshmp->minfo[TEL_OM].have	\
 				    || telstatshmp->minfo[TEL_OM].cvel == 0)
 
-#define	FILTER_READY	(!telstatshmp->minfo[TEL_IM].have       \
-			    || telstatshmp->filter == telstatshmp->scan.filter)
-
 #define	ANY_HOMING	( 					\
 			telstatshmp->minfo[TEL_HM].homing ||	\
 			telstatshmp->minfo[TEL_DM].homing ||	\
 			telstatshmp->minfo[TEL_RM].homing ||	\
-			telstatshmp->minfo[TEL_OM].homing ||	\
-			telstatshmp->minfo[TEL_IM].homing)
+			telstatshmp->minfo[TEL_OM].homing)
 
 #define	ANY_LIMITING	( 					\
 			telstatshmp->minfo[TEL_HM].limiting ||	\
 			telstatshmp->minfo[TEL_DM].limiting ||	\
 			telstatshmp->minfo[TEL_RM].limiting ||	\
-			telstatshmp->minfo[TEL_OM].limiting ||	\
-			telstatshmp->minfo[TEL_IM].limiting)
+			telstatshmp->minfo[TEL_OM].limiting)
 
 /* handy shortcuts to motor info */
 #define HMOT    (&telstatshmp->minfo[TEL_HM])
 #define DMOT    (&telstatshmp->minfo[TEL_DM])
 #define RMOT    (&telstatshmp->minfo[TEL_RM])
 #define OMOT    (&telstatshmp->minfo[TEL_OM])
-#define IMOT    (&telstatshmp->minfo[TEL_IM])
 
 
 /* telaxes.c */

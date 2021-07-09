@@ -20,11 +20,6 @@ double SERVICEALT;
 double SERVICEAZ;
 char BANNER[80];
 
-char icfn[] = "archive/config/filter.cfg";
-FilterInfo *filtinfo;
-int nfilt;
-int deffilt;
-
 static char tscfn[] = "archive/config/telsched.cfg";
 
 void
@@ -48,17 +43,6 @@ initCfg()
 	n = readCfgFile (1, tscfn, tscfg, NTSCFG);
 	if (n != NTSCFG) {
 	    cfgFileError (tscfn, n, NULL, tscfg, NTSCFG);
-	    die();
-	}
-
-	/* get fresh filter info from filter.cfg -- always 1 even if faked */
-	if (filtinfo) {
-	    free ((void *)filtinfo);
-	    filtinfo = NULL;
-	}
-	nfilt = readFilterCfg (1, icfn, &filtinfo, &deffilt, buf);
-	if (nfilt < 0) {
-	    fprintf (stderr, "%s: %s\n", icfn, buf);
 	    die();
 	}
 }

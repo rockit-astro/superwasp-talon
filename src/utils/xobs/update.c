@@ -52,8 +52,7 @@ updateStatus(int force)
 {
 
 	static double last_slow, last_fast;
-	static double last_tbusy, last_dbusy, last_obusy;
-	static double last_ibusy, last_wbusy;
+	static double last_tbusy, last_dbusy, last_obusy, last_wbusy;
 	Now *np = &telstatshmp->now;
 	int doslow = force || mjd > last_slow + SLOW_DT;
 	int dofast = force || mjd > last_fast + FAST_DT;
@@ -88,12 +87,6 @@ updateStatus(int force)
 	    showDome();
 	    if (busy)
 		last_dbusy = mjd;
-	}
-
-	busy = IMOT->cvel != 0;
-	if (doslow || busy || mjd < last_ibusy + COAST_DT) {
-	    if (busy)
-		last_ibusy = mjd;
 	}
 
 	/* always be very responsive to the scope */

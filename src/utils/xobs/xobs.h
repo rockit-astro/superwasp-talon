@@ -3,7 +3,7 @@
  */
 
 typedef enum {
-    Tel_Id=0, Filter_Id, Focus_Id, Dome_Id, Cam_Id, N_Id
+    Tel_Id=0, Focus_Id, Dome_Id, N_Id
 } FifoId;
 
 /* xobs.c */
@@ -22,7 +22,6 @@ extern int axes_xephemSet (char *buf);
 /* config.c */
 extern void initCfg (void);
 extern char icfn[];
-extern FilterInfo *filtinfo;
 extern int nfilt;
 extern int deffilt;
 extern double SUNDOWN;
@@ -74,7 +73,6 @@ extern Pixel ltcolors[LTN];
 extern Pixel editableColor;
 extern Pixel uneditableColor;
 extern void mkGUI (char *version);
-extern void fillFilterMenu(void);
 extern int setColor (Widget w, char *resource, Pixel newp);
 extern void nyi (void);
 extern String fallbacks[];

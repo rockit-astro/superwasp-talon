@@ -382,9 +382,7 @@ tel_limits(int first, ...)
 	}
 }
 
-/* Place the telescope in STOW position
-   Stow the filter
-*/
+/* Place the telescope in STOW position */
 void
 tel_stow(int first, ...)
 {
@@ -394,10 +392,6 @@ tel_stow(int first, ...)
 
     fifoWrite (Tel_Id, 0, "Telescope stow underway");
     tel_altaz(1, STOWALT, STOWAZ);
-    if(STOWFILTER[0]) { // if we have a stow filter defined
-	    sprintf(buf, "%s", STOWFILTER);
-    	filter_msg(buf);
-    }
 }
 
 /* handle tracking an astrometric position */

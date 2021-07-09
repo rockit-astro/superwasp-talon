@@ -36,22 +36,15 @@ extern char cli_tmp_image[16384];
 
 static int current_tel_cmd;    /* current command on telescope */
 static int current_dome_cmd;   /* current command on dome */
-static int current_cam_cmd;    /* current command on camera */
 
 static struct cliclient *current_tel_client;
 static struct cliclient *current_dome_client;
-static struct cliclient *current_cam_client;
-
-static int expose_onsky = 0;
-static int expose_interrupted = 0;
 
 void initCliCommand (void) {
   current_tel_cmd = 0;
   current_dome_cmd = 0;
-  current_cam_cmd = 0;
   current_tel_client = (struct cliclient *) NULL;
   current_dome_client = (struct cliclient *) NULL;
-  current_cam_client = (struct cliclient *) NULL;
 }
 
 void clientDisconnect (struct cliclient *c) {
@@ -63,10 +56,6 @@ void clientDisconnect (struct cliclient *c) {
     current_dome_client = (struct cliclient *) NULL;
     current_dome_cmd = 0;
   }
-  if(c == current_cam_client) {
-    current_cam_client = (struct cliclient *) NULL;
-    current_cam_cmd = 0;
-  }
 }
 
 int docommand (struct cliclient *c, unsigned char cmd, int paylen,
@@ -76,8 +65,6 @@ int docommand (struct cliclient *c, unsigned char cmd, int paylen,
   short rv;
  
   struct cli_object obj;
-  struct cli_raster rparm;
-  struct cli_expose eparm;
   float off[2];
   char objname[1024], abuf[32], bbuf[32];
   int dtmp;
@@ -109,21 +96,13 @@ int docommand (struct cliclient *c, unsigned char cmd, int paylen,
       /* Change to a stop */
       cmd = TCSCMD_STOP_DOME;
       break;
-    case TCSCMD_EXPOSE:
-      /* Change to a stop */
-      cmd = TCSCMD_STOP_CAM;
-      break;
     case TCSCMD_ENGMODE:
-    case TCSCMD_RASTER:
-    case TCSCMD_SCRATCH:
-    case TCSCMD_LAST_SKY:
     case TCSCMD_SET_ALARM:
       /* Ignore */
       rv = TCSRET_FAILED;
       goto doreply;
     case TCSCMD_STOP_TEL:
     case TCSCMD_STOP_DOME:
-    case TCSCMD_STOP_CAM:
       /* Try it again */
       cmd = c->cmd;
       break;
@@ -141,7 +120,7 @@ int docommand (struct cliclient *c, unsigned char cmd, int paylen,
   }
 
   /* Check that device is available and set telcmd */
-  if(cmd > 0 && (cmd <= TCSCMD_RASTER || cmd == TCSCMD_HOME)) {
+  if(cmd > 0 && (cmd <= TCSCMD_STOP_TEL || cmd == TCSCMD_HOME)) {
     /* Telescope */
     if(current_tel_cmd && c != current_tel_client) {
       cmd_err(errbuf, "telescope in use by another client");
@@ -163,18 +142,6 @@ int docommand (struct cliclient *c, unsigned char cmd, int paylen,
 
     telcmd = &current_dome_cmd;
     telclient = &current_dome_client;
-  }
-  else if(cmd == TCSCMD_EXPOSE || cmd == TCSCMD_STOP_CAM ||
-	  cmd == TCSCMD_SCRATCH || cmd == TCSCMD_LAST_SKY) {
-    /* Camera */
-    if(current_cam_cmd && c != current_cam_client) {
-      cmd_err(errbuf, "camera in use by another client");
-      rv = TCSRET_BUSY;
-      goto doreply;
-    }
-
-    telcmd = &current_cam_cmd;
-    telclient = &current_cam_client;
   }
 
   /* Normal handling of commands */
@@ -688,34 +655,6 @@ int docommand (struct cliclient *c, unsigned char cmd, int paylen,
     }
 
     break;
-  case TCSCMD_RASTER:
-    if(paylen != sizeof(struct cli_raster)) {
-      cmd_err(errbuf, "incorrect payload size, expected %d, got %d",
-	      sizeof(struct cli_raster), paylen);
-      rv = TCSRET_USAGE;
-    }
-    else {
-      memcpy(&rparm, paybuf, sizeof(rparm));
-
-      if(rparm.state < -1 || rparm.state > 1) {
-	cmd_err(errbuf, "invalid raster state, expected 1 or 0, got %d", rparm.state);
-	rv = TCSRET_USAGE;
-      }
-      else {
-	if(fifoMsg(Tel_Id, "raster %d %f", rparm.state, rparm.size) == -1) {
-	  cmd_err(errbuf, "telescope not available");
-	  rv = TCSRET_FAILED;
-	}
-	else {
-	  msg("CLI: Set raster %d size %.1f", rparm.state, rparm.size);
-	  
-	  rv = TCSRET_ACK;
-	  current_tel_cmd = cmd;
-	}
-      }
-    }
-
-    break;
   case TCSCMD_DOME:
     if(paylen != sizeof(int)) {
       cmd_err(errbuf, "incorrect payload size, expected %d, got %d",
@@ -789,122 +728,6 @@ int docommand (struct cliclient *c, unsigned char cmd, int paylen,
 	rv = TCSRET_ACK;
 	current_dome_cmd = cmd;
       }
-    }
-
-    break;
-  case TCSCMD_EXPOSE:
-    if(paylen != sizeof(struct cli_expose)) {
-      cmd_err(errbuf, "incorrect payload size, expected %d, got %d",
-	      sizeof(struct cli_expose), paylen);
-      rv = TCSRET_USAGE;
-    }
-    else {
-      int shutter = 1, isok = 1;
-
-      memcpy(&eparm, paybuf, sizeof(eparm));
-
-      switch(eparm.type) {
-      case CLI_EXPOSE_BIAS:
-	eparm.dur = 0.0;
-      case CLI_EXPOSE_DARK:
-	shutter = 0;
-	break;
-      case CLI_EXPOSE_FLAT:
-	shutter = 2;
-      case CLI_EXPOSE_OBJECT:
-	break;
-      default:
-	cmd_err(errbuf, "invalid exposure type: %d", eparm.type);
-	rv = TCSRET_USAGE;
-	isok = 0;
-      }
-
-      if(isok) {
-#ifdef CLI_DEBUG
-        msg("DEBUG: expose %d %.1f", eparm.type, eparm.dur);
-#endif
-
-	if(fifoMsg(Cam_Id,
-		   "Expose %d+%dx%dx%d %dx%d %g %d %d %s\n%s\n%s\n%s\n%s\n",
-		   0, 0, 400, 100, 1, 1,
-		   eparm.dur, shutter, 100, cli_tmp_image,
-		   "CLI",
-		   "CLI",
-		   "CLI",
-		   "SuperWASP_CLI") == -1) {
-	  cmd_err(errbuf, "camera not available");
-	  rv = TCSRET_FAILED;
-	}
-	else {
-	  msg("CLI: Expose %.1f shutter %d", eparm.dur, shutter);
-	  
-	  if(telstatshmp->shutterstate == SH_OPEN)
-	    expose_onsky = 1;
-	  else
-	    expose_onsky = 0;
-
-	  expose_interrupted = 0;
-
-	  rv = TCSRET_ACK;
-	  current_cam_cmd = cmd;
-	}
-      }
-    }
-
-    break;
-  case TCSCMD_STOP_CAM:
-
-    if(fifoMsg(Cam_Id, "Stop") == -1) {
-      cmd_err(errbuf, "camera not available");
-      rv = TCSRET_FAILED;
-    }
-    else {
-      msg("CLI: Stop camera");
-      
-      rv = TCSRET_ACK;
-      current_cam_cmd = cmd;
-    }
-
-    break;
-  case TCSCMD_SCRATCH:
-    if(paylen != sizeof(int)) {
-      cmd_err(errbuf, "incorrect payload size, expected %d, got %d",
-	      sizeof(int), paylen);
-      rv = TCSRET_USAGE;
-    }
-    else {
-      memcpy(&dtmp, paybuf, sizeof(dtmp));
-
-      if(dtmp)
-	ctmp = "ScratchOn";
-      else
-	ctmp = "ScratchOff";
-
-      if(fifoMsg(Cam_Id, ctmp) == -1) {
-	cmd_err(errbuf, "camera not available");
-	rv = TCSRET_FAILED;
-      }
-      else {
-	msg("CLI: Scratch mode %s",
-	    dtmp ? "On - WARNING: EXPOSURES WILL NOT BE SAVED" : "Off");
-	
-	rv = TCSRET_ACK;
-	current_cam_cmd = cmd;
-      }
-    }
-
-    break;
-  case TCSCMD_LAST_SKY:
-    
-    if(fifoMsg(Cam_Id, "LastSky") == -1) {
-      cmd_err(errbuf, "camera not available");
-      rv = TCSRET_FAILED;
-    }
-    else {
-      msg("CLI: Get last sky level");
-
-      rv = TCSRET_ACK;
-      current_cam_cmd = cmd;
     }
 
     break;
@@ -1007,9 +830,6 @@ void check_tel_reply (int rv, char *buf) {
     /* Check return value */
     if(rv < 0) {
       /* Failed, notify user */
-      if(strstr(buf, "weather alert"))
-	cret = TCSRET_WXALERT;
-      else
 	cret = TCSRET_FAILED;
 
       if(replycommand(current_tel_client, current_tel_cmd, cret, buf, errstr))
@@ -1058,9 +878,6 @@ void check_dome_reply (int rv, char *buf) {
     /* Check return value */
     if(rv < 0) {
       /* Failed, notify user */
-      if(strstr(buf, "weather alert"))
-	cret = TCSRET_WXALERT;
-      else
 	cret = TCSRET_FAILED;
 
       if(replycommand(current_dome_client, current_dome_cmd, cret, buf, errstr))
@@ -1076,51 +893,6 @@ void check_dome_reply (int rv, char *buf) {
 
       current_dome_cmd = 0;
       current_dome_client = (struct cliclient *) NULL;
-    }
-    /* else still going */
-  }
-}
-
-void check_cam_reply (int rv, char *buf) {
-  char errstr[ERRSTR_LEN];
-  short cret;
-
-  buf = sstrip(buf);
-
-  if(current_cam_cmd > 0) {
-#ifdef CLI_DEBUG
-    msg("DEBUG: check_cam_reply: %d %s", rv, buf);
-#endif
-
-    /* Check return value */
-    if(rv < 0) {
-      /* Failed, notify user */
-      if(strstr(buf, "weather alert"))
-	cret = TCSRET_WXALERT;
-      else
-	cret = TCSRET_FAILED;
-
-      if(replycommand(current_cam_client, current_cam_cmd, cret, buf, errstr))
-	fatal(1, "replycommand: %s", errstr);
-
-      current_cam_cmd = 0;
-      current_cam_client = (struct cliclient *) NULL;
-    }
-    else if(rv == 0) {
-      /* Completed */
-      if(current_cam_cmd == TCSCMD_EXPOSE && expose_interrupted) {
-	if(replycommand(current_cam_client, current_cam_cmd, TCSRET_WXBUTOK,
-			"Exposure complete but interrupted by weather",
-			errstr))
-	  fatal(1, "replycommand: %s", errstr);
-      }
-      else {
-	if(replycommand(current_cam_client, current_cam_cmd, TCSRET_FINISHED, buf, errstr))
-	  fatal(1, "replycommand: %s", errstr);
-      }
-
-      current_cam_cmd = 0;
-      current_cam_client = (struct cliclient *) NULL;
     }
     /* else still going */
   }
@@ -1162,41 +934,6 @@ void cli_move_dome (void) {
     current_dome_cmd = 0;
     current_dome_client = (struct cliclient *) NULL;
   }
-}
-
-/* Called by GUI to notify of camera changes */
-
-void cli_move_cam (void) {
-  char errstr[ERRSTR_LEN];
-
-  if(current_cam_cmd > 0) {
-#ifdef CLI_DEBUG
-    msg("DEBUG: aborting command %d due to GUI interaction", current_cam_cmd);
-#endif    
-
-    if(replycommand(current_cam_client, current_cam_cmd,
-		    TCSRET_FAILED, "GUI override", errstr))
-      fatal(1, "replycommand: %s", errstr);
-
-    current_cam_cmd = 0;
-    current_cam_client = (struct cliclient *) NULL;
-  }
-}
-
-/* Called by GUI to update weather alert status */
-
-void cli_wxalert (int alert) {
-  static int last_alert = 0;
-
-  /* Are we interested? */
-  if(current_cam_cmd != TCSCMD_EXPOSE || alert == last_alert)
-    return;
-
-  /* Rising edge triggers exposure flag */
-  if(alert && expose_onsky)
-    expose_interrupted = 1;
-
-  last_alert = alert;
 }
 
 static int replycommand (struct cliclient *c, int cmd, short rv, char *msg, char *errstr) {

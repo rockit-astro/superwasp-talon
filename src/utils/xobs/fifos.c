@@ -30,10 +30,8 @@
 #include "widgets.h"
 
 static void tel_rd_cb (XtPointer client, int *fdp, XtInputId *idp);
-static void filter_rd_cb (XtPointer client, int *fdp, XtInputId *idp);
 static void focus_rd_cb (XtPointer client, int *fdp, XtInputId *idp);
 static void dome_rd_cb (XtPointer client, int *fdp, XtInputId *idp);
-static void cam_rd_cb (XtPointer client, int *fdp, XtInputId *idp);
 
 /* this is used to describe the several FIFOs used to communicate with
  * the telescoped.
@@ -50,10 +48,8 @@ typedef struct {
 /* list of fifos to the control daemons */
 static FifoInfo fifos[] = {
     {"Tel",	Tel_Id,		tel_rd_cb},
-    {"Filter",	Filter_Id,	filter_rd_cb},
     {"Focus",	Focus_Id,	focus_rd_cb},
     {"Dome",	Dome_Id,	dome_rd_cb},
-    {"Camera",	Cam_Id,		cam_rd_cb},
 };
 
 #define	NFIFOS	XtNumber(fifos)
@@ -74,7 +70,7 @@ fifoMsg (FifoId fid, char *fmt, ...)
 	    die();
 	}
 
-	/* fifos can be closed while telrun is on; passive; or if no camera */
+	/* fifos can be closed while telrun is on; passive;*/
 	if (!fip->fdopen) {
 	    msg ("Service not available.");
 	    return (-1);
@@ -136,7 +132,6 @@ resetSW()
 	cli_move_dome();
 	fifoMsg (Tel_Id, "Reset");
 	fifoMsg (Dome_Id, "Reset");
-	fifoMsg (Filter_Id, "Reset");
 	fifoMsg (Focus_Id, "Reset");
 }
 
@@ -150,15 +145,12 @@ stop_all_devices()
 	    cli_move_dome();
 	    fifoMsg (Dome_Id, "Stop");
 	}
-	if (IMOT->have)
-	    fifoMsg (Filter_Id, "Stop");
 	if (OMOT->have)
 	    fifoMsg (Focus_Id, "Stop");
 }
 
 /* make connections to daemons.
  * N.B. do nothing gracefully if connections are already ok.
- * N.B. not fatal if no camerad.
  */
 void
 initPipes()
@@ -174,7 +166,7 @@ initPipes()
 			fip->fdopen = 1;
 			fprintf (stderr, "%s opened\n",fip->name);
 		  }
-	      else if (fip->fid != Cam_Id) {
+	      else {
 			fprintf (stderr, "%s: %s\n", fip->name, buf);
 			die();
 	      }
@@ -224,21 +216,6 @@ XtInputId *idp;         /* pointer to input id */
 	check_tel_reply(rv, buf);
 }
 
-/* called whenever we get input from the Filter fifo */
-/* ARGSUSED */
-static void
-filter_rd_cb (client, fdp, idp)
-XtPointer client;       /* unused */
-int *fdp;               /* pointer to file descriptor */
-XtInputId *idp;         /* pointer to input id */
-{
-	char buf[1024];
-
-	fifoRead (Filter_Id, buf, sizeof(buf));
-	msg ("Filter: %s", buf);
-	updateStatus(1);
-}
-
 /* called whenever we get input from the Focus fifo */
 /* ARGSUSED */
 static void
@@ -271,22 +248,6 @@ XtInputId *idp;         /* pointer to input id */
 
 	updateStatus(1);
 	check_dome_reply(rv, buf);
-}
-
-/* called whenever we get input from the camerad fifo */
-/* ARGSUSED */
-static void
-cam_rd_cb (client, fdp, idp)
-XtPointer client;       /* unused name */
-int *fdp;               /* pointer to file descriptor */
-XtInputId *idp;         /* pointer to input id */
-{
-	char buf[1024];
-	int s;
-
-	s = fifoRead (Cam_Id, buf, sizeof(buf));
-	msg ("Camera: %s", buf);
-	check_cam_reply(s, buf);
 }
 
 /* For RCS Only -- Do Not Edit */

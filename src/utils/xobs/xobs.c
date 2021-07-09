@@ -160,7 +160,6 @@ main (int ac, char *av[])
 
 	/* init stuff */
 	chkDaemon ("telescoped", "Tel", 1, 60);	/*long for csimcd stale socket*/
-	chkDaemon ("camerad", "Camera", 0, 5);
 	initCfg();
 	initShm();
 	initXEphem();
