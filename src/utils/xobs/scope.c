@@ -15,7 +15,6 @@
 
 #include "P_.h"
 #include "astro.h"
-#include "catalogs.h"
 #include "circum.h"
 #include "configfile.h"
 #include "misc.h"
@@ -34,17 +33,11 @@ static void prAll(double ra, double dec, double e, double ha, double alt, double
 static int getEpoch(char *epochstr, double *ep);
 static void findAA(double ra, double dec, double e, double *hap, double *altp, double *azp);
 
-/* used to store an object when set by name */
-static Obj byname;
-static int byname_ok;
-
 void s_here(Widget w, XtPointer client, XtPointer call)
 {
     char buf[32];
 
     s_updating = 1;
-
-    wtprintf(g_w[TOBJ_W], "");
 
     fs_sexa(buf, radhr(telstatshmp->CJ2kRA), 3, 3600);
     wtprintf(g_w[TRA_W], buf);
@@ -125,44 +118,31 @@ void s_edit(Widget w, XtPointer client, XtPointer call)
 
     switch (gw)
     {
-    case TOBJ_W:
-        wtprintf(g_w[TRA_W], blanks);
-        wtprintf(g_w[TDEC_W], blanks);
-        wtprintf(g_w[TALT_W], blanks);
-        wtprintf(g_w[TAZ_W], blanks);
-        wtprintf(g_w[THA_W], blanks);
-        wtprintf(g_w[TEPOCH_W], blanks);
-        break;
     case TRA_W:
         wtprintf(g_w[TALT_W], blanks);
         wtprintf(g_w[TAZ_W], blanks);
         wtprintf(g_w[THA_W], blanks);
-        wtprintf(g_w[TOBJ_W], blanks);
         break;
     case TDEC_W:
         wtprintf(g_w[TALT_W], blanks);
         wtprintf(g_w[TAZ_W], blanks);
-        wtprintf(g_w[TOBJ_W], blanks);
         break;
     case THA_W:
         wtprintf(g_w[TALT_W], blanks);
         wtprintf(g_w[TAZ_W], blanks);
         wtprintf(g_w[TRA_W], blanks);
         wtprintf(g_w[TEPOCH_W], blanks);
-        wtprintf(g_w[TOBJ_W], blanks);
         break;
     case TEPOCH_W:
         wtprintf(g_w[TALT_W], blanks);
         wtprintf(g_w[TAZ_W], blanks);
         wtprintf(g_w[THA_W], blanks);
-        wtprintf(g_w[TOBJ_W], blanks);
         break;
     case TALT_W: /* FALLTHRU */
     case TAZ_W:
         wtprintf(g_w[TRA_W], blanks);
         wtprintf(g_w[TDEC_W], blanks);
         wtprintf(g_w[THA_W], blanks);
-        wtprintf(g_w[TOBJ_W], blanks);
         break;
     default:
         fprintf(stderr, "Bogus widget: %d\n", gw);
@@ -181,14 +161,6 @@ void s_edit(Widget w, XtPointer client, XtPointer call)
     s_updating = 0;
 }
 
-/* lookup a source by name, or compute unset values.
- * N.B. don't use call -- this is used for both Text and PB widgets
- */
-void s_lookup(Widget w, XtPointer client, XtPointer call)
-{
-    (void)findAll();
-}
-
 /* requires an object or ra/dec/epoch */
 void s_track(Widget w, XtPointer client, XtPointer call)
 {
@@ -198,47 +170,35 @@ void s_track(Widget w, XtPointer client, XtPointer call)
     if (!rusure(toplevel_w, "slew to and track the new location"))
         return;
 
-    if (byname_ok)
+    String rastr, decstr, epochstr;
+    double ra, dec;
+
+    /* gather ra/dec/epoch */
+    rastr = XmTextFieldGetString(g_w[TRA_W]);
+    decstr = XmTextFieldGetString(g_w[TDEC_W]);
+    epochstr = XmTextFieldGetString(g_w[TEPOCH_W]);
+
+    /* convert -- findAll() assures us they are all good */
+    (void)scansex(rastr, &ra);
+    ra = hrrad(ra);
+    (void)scansex(decstr, &dec);
+    dec = degrad(dec);
+
+    if (strcwcmp(epochstr, "eod") == 0)
     {
-        char buf[1024];
-
-        db_write_line(&byname, buf);
-
-        fifoMsg(Tel_Id, "%s", buf);
-        msg("Hunting for %s", byname.o_name);
+        fifoMsg(Tel_Id, "RA:%.6f Dec:%.6f", ra, dec);
+        msg("Hunting for %s %s", rastr, decstr);
     }
     else
     {
-        String rastr, decstr, epochstr;
-        double ra, dec;
-
-        /* gather ra/dec/epoch */
-        rastr = XmTextFieldGetString(g_w[TRA_W]);
-        decstr = XmTextFieldGetString(g_w[TDEC_W]);
-        epochstr = XmTextFieldGetString(g_w[TEPOCH_W]);
-
-        /* convert -- findAll() assures us they are all good */
-        (void)scansex(rastr, &ra);
-        ra = hrrad(ra);
-        (void)scansex(decstr, &dec);
-        dec = degrad(dec);
-
-        if (strcwcmp(epochstr, "eod") == 0)
-        {
-            fifoMsg(Tel_Id, "RA:%.6f Dec:%.6f", ra, dec);
-            msg("Hunting for %s %s", rastr, decstr);
-        }
-        else
-        {
-            double ep = atof(epochstr);
-            fifoMsg(Tel_Id, "RA:%.6f Dec:%.6f Epoch:%g", ra, dec, ep);
-            msg("Hunting for %s %s %g", rastr, decstr, ep);
-        }
-
-        XtFree(rastr);
-        XtFree(decstr);
-        XtFree(epochstr);
+        double ep = atof(epochstr);
+        fifoMsg(Tel_Id, "RA:%.6f Dec:%.6f Epoch:%g", ra, dec, ep);
+        msg("Hunting for %s %s %g", rastr, decstr, ep);
     }
+
+    XtFree(rastr);
+    XtFree(decstr);
+    XtFree(epochstr);
 }
 
 /* requires alt/az */
@@ -276,7 +236,6 @@ static int findAll()
     Now *np = &telstatshmp->now;
     String rastr, decstr, hastr, epochstr;
     String altstr, azstr;
-    String obj;
     char buf[1024];
     int ral, decl, hal, epochl;
     int altl, azl;
@@ -287,8 +246,6 @@ static int findAll()
     s_updating = 1;
 
     /* gather all the fields */
-    obj = XmTextFieldGetString(g_w[TOBJ_W]);
-    objl = strlen(obj);
     altstr = XmTextFieldGetString(g_w[TALT_W]);
     altl = strlen(altstr);
     azstr = XmTextFieldGetString(g_w[TAZ_W]);
@@ -303,41 +260,7 @@ static int findAll()
     epochl = strlen(epochstr);
 
     /* see what we can do */
-    byname_ok = 0;
-    if (objl > 0)
-    {
-        /* lookup object */
-        char catdir[1024];
-        Obj o;
-
-        telfixpath(catdir, "archive/catalogs");
-        if (searchDirectory(catdir, obj, &o, buf) < 0)
-        {
-            /* unknown object */
-            msg("%s: %s", obj, buf);
-        }
-        else
-        {
-            /* good object */
-            double lst, ha;
-
-            /* compute @ EOD */
-            (void)obj_cir(np, &o);
-
-            now_lst(np, &lst);
-            ha = hrrad(lst) - o.s_ra;
-            haRange(&ha);
-
-            msg("%s: catalog lookup sucessful", obj);
-
-            prAll(o.s_ra, o.s_dec, EOD, ha, o.s_alt, o.s_az);
-            wtprintf(g_w[TOBJ_W], "%s", o.o_name);
-            byname_ok = 1;
-            byname = o;
-            ret = 0;
-        }
-    }
-    else if (altl && azl)
+    if (altl && azl)
     {
 
         /* given alt/az, find other stuff */
@@ -466,7 +389,6 @@ static int findAll()
     }
 
 out:
-    XtFree(obj);
     XtFree(altstr);
     XtFree(azstr);
     XtFree(rastr);

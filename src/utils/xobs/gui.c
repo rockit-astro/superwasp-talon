@@ -189,11 +189,6 @@ void mkGUI(char *version)
                   XmNleftAttachment, XmATTACH_FORM, XmNrightAttachment, XmATTACH_FORM, NULL);
 }
 
-void nyi()
-{
-    query(toplevel_w, "Not yet implemented :-(", "Ok", NULL, NULL, NULL, NULL, NULL);
-}
-
 /* set the given Pixel resource to newp.
  * return 1 if it was different, 0 if it was the same already.
  */
@@ -313,7 +308,7 @@ void guiSensitive(int whether)
 {
     static Widget *batch_wp[] = {
         &g_w[TSERV_W],   &g_w[TSTOW_W],   &g_w[TGOTO_W],   &g_w[TTRACK_W],  &g_w[CFHOME_W],  &g_w[CFLIM_W],
-        &g_w[CRELOAD_W], &g_w[CCALIBA_W], &g_w[CPADDLE_W], &g_w[CCNFOFF_W], &g_w[CCNFOFF_W],
+        &g_w[CPADDLE_W], &g_w[CCNFOFF_W], &g_w[CCNFOFF_W],
     };
     int i;
 
@@ -462,8 +457,6 @@ static Widget mkControl(Widget main_w)
         {"Quit", 0, g_exit, &g_w[CEXIT_W], "Quit this program"},
         {"Find Homes", 0, g_home, &g_w[CFHOME_W], "Start telescope seeking all home switches, if any"},
         {"Find Limits", 0, g_limit, &g_w[CFLIM_W], "Start telescope seeking all limit switches, if any"},
-        {"Reload", 0, g_init, &g_w[CRELOAD_W], "Reread all .cfg config files"},
-        {"Calib Axes", 0, g_calib, &g_w[CCALIBA_W], "Toggle a tool to calibrate telescope axis orientations"},
         {"No Confirm", 1, g_confirm, &g_w[CCNFOFF_W], "Toggle whether to confirm actions first"},
         {"Paddle", 0, g_paddle, &g_w[CPADDLE_W], "Toggle a tool to directly command telescope motions"},
     };
@@ -619,30 +612,13 @@ static Widget mkScope(Widget main_w)
     g_w[THERE_W] = l_w[0];
     wtip(l_w[0], "Load all fields with current scope position");
 
-    l_w[1] = XtVaCreateManagedWidget("SSv", xmPushButtonWidgetClass, rf_w, NULL);
-    wltprintf(pbT, l_w[1], "Lookup");
-    XtAddCallback(l_w[1], XmNactivateCallback, s_lookup, NULL);
-    g_w[TLOOK_W] = l_w[1];
-    wtip(l_w[1], "Look up source in catalog, or compute unset coordinates");
-
-    l_w[2] = XtVaCreateManagedWidget("SGT", xmPushButtonWidgetClass, rf_w, NULL);
-    wltprintf(pbT, l_w[2], "Track");
-    XtAddCallback(l_w[2], XmNactivateCallback, s_track, NULL);
-    g_w[TTRACK_W] = l_w[2];
+    l_w[1] = XtVaCreateManagedWidget("SGT", xmPushButtonWidgetClass, rf_w, NULL);
+    wltprintf(pbT, l_w[1], "Track");
+    XtAddCallback(l_w[1], XmNactivateCallback, s_track, NULL);
+    g_w[TTRACK_W] = l_w[1];
     wtip(l_w[2], "Slew to coordinates and track");
 
     mkRow(rf_w, l_w, 3, 8);
-
-    rf_w = XtVaCreateManagedWidget("SF", xmFormWidgetClass, rrc_w, XmNverticalSpacing, 3, NULL);
-    l_w[0] = XtVaCreateManagedWidget("SSt", xmLabelWidgetClass, rf_w, NULL);
-    wltprintf(prT, l_w[0], "Source name:");
-    l_w[1] = XtVaCreateManagedWidget("SSt", xmTextFieldWidgetClass, rf_w, XmNbackground, editableColor, XmNcolumns, 10,
-                                     XmNmarginHeight, 1, XmNmarginWidth, 1, NULL);
-    wtip(l_w[1], "Enter object to look up in catalogs, then press ENTER");
-    XtAddCallback(l_w[1], XmNactivateCallback, s_lookup, NULL);
-    XtAddCallback(l_w[1], XmNvalueChangedCallback, s_edit, (XtPointer)TOBJ_W);
-    g_w[TOBJ_W] = l_w[1];
-    mkRow(rf_w, l_w, 2, 10);
 
     rc_w = XtVaCreateManagedWidget("CRC", xmRowColumnWidgetClass, rrc_w, XmNmarginWidth, 0, XmNnumColumns, 2,
                                    XmNpacking, XmPACK_COLUMN, NULL);
@@ -656,7 +632,6 @@ static Widget mkScope(Widget main_w)
             wtip(tf_w, ctrls[i].tip);
         if (ctrls[i].gw)
             g_w[ctrls[i].gw] = tf_w;
-        XtAddCallback(tf_w, XmNactivateCallback, s_lookup, NULL);
         XtAddCallback(tf_w, XmNvalueChangedCallback, s_edit, (XtPointer)ctrls[i].gw);
     }
 

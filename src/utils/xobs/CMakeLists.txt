@@ -3,7 +3,6 @@ project (xobs)
 
 set(XOBS_SRC 
         xobs.c 
-        calaxes.c 
         config.c 
         control.c 
         dome.c 
@@ -16,7 +15,6 @@ set(XOBS_SRC
         telrun.c 
         tips.c 
         update.c 
-        xephem.c
 ) 
 
 include_directories ("${CORE_LIBS_DIR}/astro")

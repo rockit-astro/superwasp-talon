@@ -95,14 +95,6 @@ void g_exit(Widget w, XtPointer client, XtPointer call)
     die();
 }
 
-void g_init(Widget w, XtPointer client, XtPointer call)
-{
-    if (!rusure(toplevel_w, "reload all config files"))
-        return;
-
-    resetSW();
-}
-
 void g_confirm(Widget w, XtPointer client, XtPointer call)
 {
     /* let them turn confirmations back on without a confirmation */
@@ -156,11 +148,6 @@ void g_limit(Widget w, XtPointer client, XtPointer call)
     }
     else
         XtUnmanageChild(limit_w);
-}
-
-void g_calib(Widget w, XtPointer client, XtPointer call)
-{
-    axes_manage();
 }
 
 void g_paddle(Widget w, XtPointer client, XtPointer call)

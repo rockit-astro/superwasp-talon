@@ -25,8 +25,6 @@ typedef enum
     CEXIT_W,
     CFHOME_W,
     CFLIM_W,
-    CRELOAD_W,
-    CCALIBA_W,
     CPADDLE_W,
     CCNFOFF_W,
 
@@ -48,9 +46,7 @@ typedef enum
     TSTOW_W,
     TGOTO_W,
     THERE_W,
-    TLOOK_W,
     TTRACK_W,
-    TOBJ_W,
     TRA_W,
     TDEC_W,
     TEPOCH_W,

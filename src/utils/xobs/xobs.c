@@ -157,7 +157,6 @@ int main(int ac, char *av[])
     chkDaemon("telescoped", "Tel", 1, 60); /*long for csimcd stale socket*/
     initCfg();
     initShm();
-    initXEphem();
     mkGUI(version);
 
     /* connect fifos if alone and no telrun running */

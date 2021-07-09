@@ -19,10 +19,6 @@ extern Obj sunobj, moonobj;
 extern int xobs_alone;
 extern void die(void);
 
-/* calaxes.c */
-extern void axes_manage(void);
-extern int axes_xephemSet(char *buf);
-
 /* config.c */
 extern void initCfg(void);
 extern char icfn[];
@@ -33,32 +29,20 @@ extern double DOMETOL, FLATTAZ, FLATTALT, FLATDAZ;
 extern double STOWALT, STOWAZ;
 extern double SERVICEALT, SERVICEAZ;
 extern double MAXHA, MINALT, MAXDEC;
-extern int OffTargPitch;
-extern int OffTargDuration;
-extern int OffTargPercent;
-extern int OnTargPitch;
-extern int OnTargDuration;
-extern int OnTargPercent;
-extern int BeepPeriod;
 extern char BANNER[80];
-extern int MAXFLINT;
 
 /* control.c */
 extern void g_stop(Widget w, XtPointer client, XtPointer call);
 extern void g_exit(Widget w, XtPointer client, XtPointer call);
-extern void g_init(Widget w, XtPointer client, XtPointer call);
 extern void g_home(Widget w, XtPointer client, XtPointer call);
 extern void g_limit(Widget w, XtPointer client, XtPointer call);
 extern void g_focus(Widget w, XtPointer client, XtPointer call);
-extern void g_calib(Widget w, XtPointer client, XtPointer call);
 extern void g_paddle(Widget w, XtPointer client, XtPointer call);
 extern void g_confirm(Widget w, XtPointer client, XtPointer call);
 
 /* dome.c */
 extern void domeOpenCB(Widget w, XtPointer client, XtPointer call);
 extern void domeCloseCB(Widget w, XtPointer client, XtPointer call);
-extern void domeAutoCB(Widget w, XtPointer client, XtPointer call);
-extern void domeGotoCB(Widget w, XtPointer client, XtPointer call);
 
 /* fifos.c */
 extern int fifoMsg(FifoId fid, char *fmt, ...);
@@ -106,7 +90,6 @@ extern void rusure_seton(int whether);
 extern void s_stow(Widget w, XtPointer client, XtPointer call);
 extern void s_service(Widget w, XtPointer client, XtPointer call);
 extern void s_here(Widget w, XtPointer client, XtPointer call);
-extern void s_lookup(Widget w, XtPointer client, XtPointer call);
 extern void s_track(Widget w, XtPointer client, XtPointer call);
 extern void s_goto(Widget w, XtPointer client, XtPointer call);
 extern void s_edit(Widget w, XtPointer client, XtPointer call);
@@ -132,6 +115,3 @@ extern void tip_seton(int whether);
 
 /* update.c */
 extern void updateStatus(int force);
-
-/* xephem.c */
-extern void initXEphem(void);
