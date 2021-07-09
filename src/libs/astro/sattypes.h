@@ -3,19 +3,20 @@
 
 /* $Id: sattypes.h,v 1.1.1.1 2006/01/13 20:43:56 jmi Exp $ */
 
-typedef struct _Vec3 {
+typedef struct _Vec3
+{
     double x, y, z;
 } Vec3;
 
-
-typedef struct _LookAngle {
+typedef struct _LookAngle
+{
     double az;
     double el;
     double r;
 } LookAngle;
 
-
-typedef struct _Geoloc {
+typedef struct _Geoloc
+{
     double lt;
     double ln;
     double h;

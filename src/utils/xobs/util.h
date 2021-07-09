@@ -18,30 +18,33 @@
 #define ABS(x) ((x) >= 0 ? (x) : -(x))
 
 #undef SWAP
-#define SWAP(x, y, t) (t) = (x); (x) = (y); (y) = (t)
+#define SWAP(x, y, t)                                                                                                  \
+    (t) = (x);                                                                                                         \
+    (x) = (y);                                                                                                         \
+    (y) = (t)
 
-#define ARRAYLEN(a) (sizeof(a)/sizeof((a)[0]))
+#define ARRAYLEN(a) (sizeof(a) / sizeof((a)[0]))
 
-#define NINT(a) ((int) ((a)+((a) < 0 ? -0.5 : 0.5)))
-#define NLNG(a) ((long) ((a)+((a) < 0 ? -0.5 : 0.5)))
+#define NINT(a) ((int)((a) + ((a) < 0 ? -0.5 : 0.5)))
+#define NLNG(a) ((long)((a) + ((a) < 0 ? -0.5 : 0.5)))
 
 /* --Functions-- */
 
 /* Utility functions */
 
-void setprogname (const char *name);
+void setprogname(const char *name);
 
-void fatal (int code, const char *fmt, ...);
-void warning (const char *fmt, ...);
-void error (int code, const char *fmt, ...);
+void fatal(int code, const char *fmt, ...);
+void warning(const char *fmt, ...);
+void error(int code, const char *fmt, ...);
 
-void report_err (char *errstr, const char *fmt, ...);
-void report_syserr (char *errstr, const char *fmt, ...);
+void report_err(char *errstr, const char *fmt, ...);
+void report_syserr(char *errstr, const char *fmt, ...);
 
-char *sstrip (char *str);
+char *sstrip(char *str);
 
 /* In libc, but not the headers */
 
-char *basename (const char *);
+char *basename(const char *);
 
 #endif /* __UTIL_H__ */
