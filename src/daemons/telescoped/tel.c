@@ -66,7 +66,6 @@ static int trackObj (Obj *op, int first);
 static void findAxes (Now *np, Obj *op, double *xp, double *yp, double *rp);
 static int chkLimits (int wrapok, double *xp, double *yp, double *rp);
 static void jogTrack (int first, char dircode);
-static void trackUpdateVel (void);
 static void jogSlew (int first, char dircode);
 static int checkAxes(void);
 static char *sayWhere (double alt, double az);
@@ -89,9 +88,6 @@ static double d_offset;		/* delta dec to be added */
 static double strack;		/* when current e/mtrack started */
 
 int tel_ishomed (void);
-
-static double jog_hvel;         /* jog HA velocity */
-static double jog_dvel;         /* jog Dec velocity */
 
 /* called when we receive a message from the Tel fifo.
  * as well as regularly with !msg just to update things.
@@ -431,8 +427,6 @@ tel_radecep (int first, ...)
 	    telstatshmp->telstate = TS_HUNTING;
 	    telstatshmp->telstateidx++;
 	    telstatshmp->jogging_ison = 0;
-	    jog_hvel = 0.0;
-	    jog_dvel = 0.0;
 	    r_offset = d_offset = 0;
 
 	    obj_cir (np, op);	/* just for sayWhere */
@@ -475,8 +469,6 @@ tel_radeceod (int first, ...)
 	    telstatshmp->telstate = TS_HUNTING;
 	    telstatshmp->telstateidx++;
 	    telstatshmp->jogging_ison = 0;
-	    jog_hvel = 0.0;
-	    jog_dvel = 0.0;
 	    r_offset = d_offset = 0;
 
 	    obj_cir (np, op);	/* just for sayWhere */
@@ -509,8 +501,6 @@ tel_op (int first, ...)
 	    telstatshmp->telstate = TS_HUNTING;
 	    telstatshmp->telstateidx++;
 	    telstatshmp->jogging_ison = 0;
-	    jog_hvel = 0.0;
-	    jog_dvel = 0.0;
 
 	    obj_cir (np, op);	/* just for sayWhere */
 	}
@@ -541,8 +531,6 @@ tel_altaz (int first, ...)
 	    /* find target axis positions once */
 	    aa_hadec (lat, alt, az, &ha, &dec);
 	    telstatshmp->jogging_ison = 0;
-	    jog_hvel = 0.0;
-	    jog_dvel = 0.0;
 	    r_offset = d_offset = 0;
 	    hd2xyr (ha, dec, &x, &y, &r);
 	    if (chkLimits (1, &x, &y, &r) < 0) {
@@ -636,8 +624,6 @@ tel_hadec (int first, ...)
 
 	    /* find target axis positions once */
 	    telstatshmp->jogging_ison = 0;
-	    jog_hvel = 0.0;
-	    jog_dvel = 0.0;
 	    r_offset = d_offset = 0;
 	    hd2xyr (ha, dec, &x, &y, &r);
 	    if (chkLimits (1, &x, &y, &r) < 0) {
@@ -755,8 +741,6 @@ tel_jog (int first, char jog_dir[])
 	else
 	    jogSlew (first, jog_dir[0]);
 }
-
-
 
 /* aux support functions */
 
@@ -1196,8 +1180,6 @@ stopTel(int fast)
 	}
 	
 	telstatshmp->jogging_ison = 0;
-	jog_hvel = 0.0;
-	jog_dvel = 0.0;
 	telstatshmp->telstate = TS_STOPPED;	/* well, soon anyway */
 	telstatshmp->telstateidx++;
 }
@@ -1378,62 +1360,66 @@ dummyTarg()
 static void
 jogTrack (int first, char dircode)
 {
+	MotorInfo *mip = NULL;
+        double gvel = 0;
+        double scale;
+        int stpv;
+
 	/* establish axis and vel */
 	switch (dircode) {
-	case 'N': jog_hvel = 0.0; jog_dvel =  CGUIDEVEL; break;
-	case 'n': jog_hvel = 0.0; jog_dvel =  FGUIDEVEL; break;
-	case 'S': jog_hvel = 0.0; jog_dvel = -CGUIDEVEL; break;
-	case 's': jog_hvel = 0.0; jog_dvel = -FGUIDEVEL; break;
-	case 'E': jog_dvel = 0.0; jog_hvel =  CGUIDEVEL; break;
-	case 'e': jog_dvel = 0.0; jog_hvel =  FGUIDEVEL; break;
-	case 'W': jog_dvel = 0.0; jog_hvel = -CGUIDEVEL; break;
-	case 'w': jog_dvel = 0.0; jog_hvel = -FGUIDEVEL; break;
-	case '0': jog_hvel = 0.0; jog_dvel = 0.0; break;
-	default:
-	  tdlog ("Bogus jog direction code '%c'", dircode);
-	  return;
+	case 'N': mip = DMOT; gvel = CGUIDEVEL; break;
+	case 'n': mip = DMOT; gvel = FGUIDEVEL; break;
+	case 'S': mip = DMOT; gvel = -CGUIDEVEL; break;
+	case 's': mip = DMOT; gvel = -FGUIDEVEL; break;
+	case 'E': mip = HMOT; gvel = CGUIDEVEL; break;
+	case 'e': mip = HMOT; gvel = FGUIDEVEL; break;
+	case 'W': mip = HMOT; gvel = -CGUIDEVEL; break;
+	case 'w': mip = HMOT; gvel = -FGUIDEVEL; break;
+	case '0':
+		if (!virtual_mode)
+		{
+			mip = HMOT;
+			if (mip->have)
+				csi_intr(MIPCFD(mip)); /* kill while() */
+			mip = DMOT;
+			if (mip->have)
+				csi_intr(MIPCFD(mip)); /* kill while() */
+
+			tdlog("HA, Dec axis offset = 0");
+			return;
+		}
 	}
 
-	trackUpdateVel();
+	/* sanity checks */
+	if (!mip)
+	{
+		tdlog ("Bogus jog direction code '%c'", dircode);
+		return;
+	}
+
+	if (!mip->have)
+	{
+		tdlog ("No axis to move '%c'", dircode);
+		return;
+	}
+
+
+	/* ok, issue the jog */
+	if (mip->haveenc)
+		scale = mip->esign * mip->estep / (2 * PI);
+	else
+		scale = mip->sign * mip->step / (2 * PI);
+	stpv = floor(gvel * scale + 0.5);
+
+	if (virtual_mode)
+		vmcSetTrackingOffset(mip->axis, stpv);
+	else
+	{
+		csi_w(MIPCFD(mip), "while(1) {toffset += %d/5; pause(200);}", stpv);
+		tdlog("%s axis offset now %d vel %f", mip == HMOT ? "HA" : "Dec", stpv, 3600 * 180 * stpv / (PI * scale));
+	}
+
 	telstatshmp->jogging_ison = 1;
-}
-
-static void trackAdjustAxis (MotorInfo *mip, double gvel, char *name) {
-  double scale;
-  int stpv;
-
-  if(gvel != 0.0) {
-    if(!mip->have) {
-      tdlog("No %s axis", name);
-      return;
-    }
-  
-    if(mip->haveenc)
-      scale = mip->esign * mip->estep / (2 * PI);
-    else
-      scale = mip->sign * mip->step / (2 * PI);
-
-    stpv = floor(gvel * scale + 0.5);
-
-    if(virtual_mode)
-      vmcSetTrackingOffset(mip->axis, stpv);
-    else
-      csi_w(MIPCFD(mip), "while(1) {toffset += %d/5; pause(200);}", stpv);
-
-    tdlog("%s axis offset now %d vel %f", name, stpv, 3600 * 180 * stpv / (PI * scale));
-  }
-  else {
-    if(!virtual_mode && mip->have)
-      csi_intr(MIPCFD(mip));   /* kill while() */
-
-    tdlog("%s axis offset = 0", name);
-  }
-}
-
-static void trackUpdateVel (void) {
-  /* Adjust speeds */
-  trackAdjustAxis(HMOT, jog_hvel, "HA");
-  trackAdjustAxis(DMOT, jog_dvel, "Dec");
 }
 
 /* called when get a j* command while in any state other than TRACKING.
@@ -1463,8 +1449,6 @@ jogSlew (int first, char dircode)
 	    stopTel(0);
 	    fifoWrite (Tel_Id, 0, "Paddle command stop");
 	    telstatshmp->jogging_ison = 0;
-	    jog_hvel = 0.0;
-	    jog_dvel = 0.0;
 	    return;
 	}
 
@@ -1482,6 +1466,8 @@ jogSlew (int first, char dircode)
 	if(virtual_mode) {
 		vmcJog(mip->axis,CVELStp(mip));
 	} else {
+		csi_w (MIPCFD(mip), "clock=0;");
+		csi_w (MIPCFD(mip), "timeout=300000;");
 		csi_w (MIPCFD(mip), "mtvel=%d;", CVELStp(mip));
 	}
 	telstatshmp->telstate = TS_SLEWING;
@@ -1520,8 +1506,6 @@ offsetTracking (int first, double harcsecs, double darcsecs, int report)
 	
 	// Turn on jogging ... this produces the offset and also serves as a flag that we have done this	
 	telstatshmp->jogging_ison = 1;
-	jog_hvel = 0.0;
-	jog_dvel = 0.0;
 	
 	if(report)
     fifoWrite (Tel_Id, 0, "Tracking offset by %3.3f x %3.3f arcseconds (%ld x %ld steps)",

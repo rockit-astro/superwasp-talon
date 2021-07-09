@@ -33,6 +33,7 @@ typedef struct {
     /* config values or state info */
     char axis;			/* pc39 axis code */
     int have : 1;		/* set if we even have this motor */
+    int xtrack : 1;
     int haveenc : 1;		/* set if this axis uses an encoder */
     int enchome : 1;		/* set to use internal enc home, else ext sw */
     int havelim : 1;		/* set if this axis uses limits */
@@ -106,7 +107,6 @@ typedef enum {
  * D refers to the telescope axis of "latitude", be it Dec or Alt.
  */
 typedef struct {
-
     /* time info */
     Now now;			/* current time and location info */
     int dt;			/* update period, ms */
@@ -116,13 +116,14 @@ typedef struct {
     double CARA, CAHA, CADec;	/* EOD apparent RA/HA/Dec, rads */
     double Calt, Caz;		/* alt, az, rads */
     double CPA;			/* parallactic angle, rads, + when west */
+    double Clst;                /* local sidereal time */
 
     /* desired position now .. N.B. iff TEL_HUNTING/SLEWING/TRACKING */
     double DJ2kRA, DJ2kDec;	/* J2000 astrometric RA/Dec, rads */
     double DARA, DAHA, DADec;	/* EOD apparent RA/HA/Dec, rads */
     double Dalt, Daz;		/* alt, az, rads */
     double DPA;			/* parallactic angle, rads, + when west */
-    double Clst;                /* local sidereal time */
+
 
     /* position offsets: add to real to form desired */
     double mdha, mddec;		/* mesh corrections, rads */
@@ -170,7 +171,6 @@ typedef struct {
 #define DMOT    (&telstatshmp->minfo[TEL_DM])
 #define RMOT    (&telstatshmp->minfo[TEL_RM])
 #define OMOT    (&telstatshmp->minfo[TEL_OM])
-
 
 /* telaxes.c */
 extern void tel_hadec2xy (double H, double D, TelAxes *tap, double *X,
