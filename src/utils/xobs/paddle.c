@@ -439,29 +439,6 @@ static void armArrow(Widget w)
         if (w == w_w)
             fifoMsg(Dome_Id, "j-");
     }
-#if WINDSCREEN
-    if (XmToggleButtonGetState(screenE_w))
-    {
-        if (w == n_w)
-            system("windscreen 1 open");
-        if (w == s_w)
-            system("windscreen 1 close");
-    }
-    if (XmToggleButtonGetState(screenW_w))
-    {
-        if (w == n_w)
-            system("windscreen 2 open");
-        if (w == s_w)
-            system("windscreen 2 close");
-    }
-    if (XmToggleButtonGetState(screenS_w))
-    {
-        if (w == n_w)
-            system("windscreen 3 open");
-        if (w == s_w)
-            system("windscreen 3 close");
-    }
-#endif
 }
 
 static void disarmArrow(Widget w)

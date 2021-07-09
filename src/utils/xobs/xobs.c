@@ -160,7 +160,7 @@ int main(int ac, char *av[])
     mkGUI(version);
 
     /* connect fifos if alone and no telrun running */
-    if (xobs_alone && chkTelrun() < 0)
+    if (xobs_alone)
         initPipes();
 
     /* start a periodic timer */

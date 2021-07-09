@@ -12,7 +12,6 @@ set(XOBS_SRC
         query.c 
         scope.c 
         skymap.c 
-        telrun.c 
         tips.c 
         update.c 
 ) 
