@@ -252,6 +252,7 @@ tel_home(int first, ...)
 	    /* if get here, set new state */
 	    active_func = tel_home;
 	    telstatshmp->telstate = TS_HOMING;
+	    telstatshmp->telstateidx++;
 	}
 
 	/* continue to seek home on each axis still not done */
@@ -279,6 +280,7 @@ tel_home(int first, ...)
 	/* really done when none left */
 	if (!nwant) {
 	    telstatshmp->telstate = TS_STOPPED;
+	    telstatshmp->telstateidx++;
 	    active_func = NULL;
 	    fifoWrite (Tel_Id, 0, "Scope homing complete");
 	}
@@ -344,6 +346,7 @@ tel_limits(int first, ...)
 	    /* new state */
 	    active_func = tel_limits;
 	    telstatshmp->telstate = TS_LIMITING;
+	    telstatshmp->telstateidx++;
 	}
 
 	/* continue to seek limits on each axis still not done */
@@ -426,6 +429,7 @@ tel_radecep (int first, ...)
 	    o = *op;
 	    active_func = tel_radecep;
 	    telstatshmp->telstate = TS_HUNTING;
+	    telstatshmp->telstateidx++;
 	    telstatshmp->jogging_ison = 0;
 	    jog_hvel = 0.0;
 	    jog_dvel = 0.0;
@@ -469,6 +473,7 @@ tel_radeceod (int first, ...)
 	    o = *op;
 	    active_func = tel_radeceod;
 	    telstatshmp->telstate = TS_HUNTING;
+	    telstatshmp->telstateidx++;
 	    telstatshmp->jogging_ison = 0;
 	    jog_hvel = 0.0;
 	    jog_dvel = 0.0;
@@ -502,6 +507,7 @@ tel_op (int first, ...)
 	    o = *op;
 	    active_func = tel_op;
 	    telstatshmp->telstate = TS_HUNTING;
+	    telstatshmp->telstateidx++;
 	    telstatshmp->jogging_ison = 0;
 	    jog_hvel = 0.0;
 	    jog_dvel = 0.0;
@@ -546,6 +552,7 @@ tel_altaz (int first, ...)
 
 	    /* set new state */
 	    telstatshmp->telstate = TS_SLEWING;
+	    telstatshmp->telstateidx++;
 	    active_func = tel_altaz;
 
 	    /* set new raw destination */
@@ -640,6 +647,7 @@ tel_hadec (int first, ...)
 
 	    /* set new state */
 	    telstatshmp->telstate = TS_SLEWING;
+	    telstatshmp->telstateidx++;
 	    active_func = tel_hadec;
 
 	    /* set raw destination */
@@ -731,6 +739,7 @@ tel_stop (int first, ...)
 
 	/* if get here, everything has stopped */
 	telstatshmp->telstate = TS_STOPPED;
+	telstatshmp->telstateidx++;
 	active_func = NULL;
 	fifoWrite (Tel_Id, 0, "Stop complete");
 	readRaw();
@@ -970,12 +979,14 @@ trackObj (Obj *op, int first)
 		fifoWrite (Tel_Id, 3, "All axes have tracking lock");
 		fifoWrite (Tel_Id, 0, "Now tracking");
 		telstatshmp->telstate = TS_TRACKING;
+		telstatshmp->telstateidx++;
 	    }
 	    break;
 	case TS_TRACKING:
 	    if (!telstatshmp->jogging_ison && onTarget(&mip) < 0) {
 		fifoWrite (Tel_Id, 4, "Axis %d lost tracking lock", mip->axis);
 		telstatshmp->telstate = TS_HUNTING;
+		telstatshmp->telstateidx++;
 	    }
 	    break;
 
@@ -1119,6 +1130,7 @@ mkCook()
 	telstatshmp->CARA = ra;
 	telstatshmp->CAHA = ha;
 	telstatshmp->CADec = dec;
+	telstatshmp->Clst = lst;
 
 	/* find J2000 astrometric equatorial coords */
 	ap_as (np, J2000, &ra, &dec);
@@ -1187,6 +1199,7 @@ stopTel(int fast)
 	jog_hvel = 0.0;
 	jog_dvel = 0.0;
 	telstatshmp->telstate = TS_STOPPED;	/* well, soon anyway */
+	telstatshmp->telstateidx++;
 }
 
 /* return 0 if all axes are within acceptable margin of desired, else -1 if
@@ -1472,6 +1485,7 @@ jogSlew (int first, char dircode)
 		csi_w (MIPCFD(mip), "mtvel=%d;", CVELStp(mip));
 	}
 	telstatshmp->telstate = TS_SLEWING;
+	telstatshmp->telstateidx++;
 	fifoWrite (Tel_Id, 5, "Paddle command %s", msg);
 	telstatshmp->jogging_ison = 1;
 }

@@ -82,6 +82,7 @@ typedef enum {
 
 /* telescope states */
 typedef enum {
+    TS_ABSENT,                  /* placeholder for teld monitoring */
     TS_STOPPED,			/* telescope motionless; no updates occuring */
     TS_HUNTING,			/* searching for tra/dec, then track */
     TS_TRACKING,		/* tracking object at tra/tdec */
@@ -121,6 +122,7 @@ typedef struct {
     double DARA, DAHA, DADec;	/* EOD apparent RA/HA/Dec, rads */
     double Dalt, Daz;		/* alt, az, rads */
     double DPA;			/* parallactic angle, rads, + when west */
+    double Clst;                /* local sidereal time */
 
     /* position offsets: add to real to form desired */
     double mdha, mddec;		/* mesh corrections, rads */
@@ -133,7 +135,14 @@ typedef struct {
 
     /* various status indicators */
     TelState telstate;		/* telescope state */
-    int jogging_ison : 1;	/* currently jogged/jogging from target */
+    int telstateidx;
+    int jogging_ison;		/* currently jogged/jogging from target */
+
+    /*
+     * everything above should be kept in sync with the W1m talon code
+     * SuperWASP specific state is below
+     */
+
     DShState shutterstate;	/* shutter state */
 
     /* Dome alarm */
