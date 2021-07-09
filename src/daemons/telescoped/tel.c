@@ -318,6 +318,7 @@ static void tel_home(int first, ...)
  */
 static void tel_limits(int first, ...)
 {
+    static int ishomed[NMOT];
     static int want[NMOT];
     static int nwant;
     MotorInfo *mip;
@@ -367,6 +368,12 @@ static void tel_limits(int first, ...)
         FEM(mip)
         {
             i = mip - &telstatshmp->minfo[0];
+
+            /* Something in the limiting procedure resets this bit
+             * Record the initial state so we can fix it afterwards
+             */
+            ishomed[i] = mip->ishomed;
+
             if (want[i])
             {
                 switch (axis_limits(mip, Tel_Id, 1))
@@ -408,7 +415,6 @@ static void tel_limits(int first, ...)
             case 1:
                 continue;
             case 0:
-                fifoWrite(Tel_Id, 2, "Axis %d: limits complete", mip->axis);
                 mip->cvel = 0;
                 want[i] = 0;
                 nwant--;
@@ -421,9 +427,17 @@ static void tel_limits(int first, ...)
     if (!nwant)
     {
         stopTel(0);
+
         initCfg(); /* read new limits */
         active_func = NULL;
         fifoWrite(Tel_Id, 0, "All Scope limits are complete.");
+
+        /* restore the inital home state */
+        FEM(mip)
+        {
+            i = mip - &telstatshmp->minfo[0];
+            mip->ishomed = ishomed[i];
+        }
 
         /* N.B. save TEL_HM limits in tax */
         telstatshmp->tax.hneglim = HMOT->neglim;
