@@ -33,8 +33,6 @@
 #include <Xm/ToggleB.h>
 #include <Xm/Xm.h>
 
-#include <X11/xpm.h>
-
 #include "P_.h"
 #include "astro.h"
 #include "circum.h"
@@ -56,19 +54,10 @@ Pixel ltcolors[LTN];
 Pixel editableColor;
 Pixel uneditableColor;
 
-String fallbacks[] = {"XObs*background: wheat",
+String fallbacks[] = {"XObs*background: CornSilk3",
                       "XObs*foreground: #11f",
                       "XObs*Query*background: #d33",
                       "XObs*Query*foreground: white",
-                      "XObs*XmTextField.fontList: \
-	-*-lucidatypewriter-medium-r-*-*-12-*-*-*-*-*-*-*",
-                      "XObs*messageST.fontList: \
-	-*-lucidatypewriter-medium-r-*-*-12-*-*-*-*-*-*-*",
-                      "XObs*fontList: \
-    	-*-lucidatypewriter-bold-r-*-*-12-*-*-*-*-*-*-*=prompt, \
-    	-*-lucidatypewriter-bold-r-*-*-12-*-*-*-*-*-*-*=button, \
-	-*-times-bold-i-*-*-14-*-*-*-*-*-*-*=frame, \
-	",
 
                       "XObs*highlightThickness: 0",
                       "XObs*XmFrame.shadowThickness: 4",
@@ -121,13 +110,9 @@ static void mkGC(void);
 
 static char logfn[] = "archive/logs/xobsmsgs.log";
 
-static int limits_sensitive;
-static int calib_sensitive;
-
 /* build the entire GUI off toplevel_w */
-void mkGUI(char *version)
+void mkGUI()
 {
-    char buf[1024];
     Widget t_w = toplevel_w;
     Widget main_w;
     Widget cur_w;
@@ -140,8 +125,7 @@ void mkGUI(char *version)
     Widget info_w;
     Widget hf_w;
 
-    (void)sprintf(buf, "XObservatory -- Version %s", version);
-    XtVaSetValues(toplevel_w, XmNtitle, buf, NULL);
+    XtVaSetValues(toplevel_w, XmNtitle, "XObservatory", NULL);
 
     ltcolors[LTOK] = getColor(t_w, getXRes(t_w, "OkColor", "White"));
     ltcolors[LTIDLE] = getColor(t_w, getXRes(t_w, "IdleColor", "White"));
@@ -315,14 +299,9 @@ void guiSensitive(int whether)
     for (i = 0; i < XtNumber(batch_wp); i++)
         XtSetSensitive(*batch_wp[i], whether && xobs_alone);
 
-    limits_sensitive = (whether && xobs_alone);
-    calib_sensitive = limits_sensitive;
-
     /* these are only ever sensitive if we are alone */
     if (!xobs_alone)
-    {
         XtSetSensitive(g_w[CSTOP_W], 0);
-    }
 
     /* dome sensitivity is left up to updateStatus() */
 }

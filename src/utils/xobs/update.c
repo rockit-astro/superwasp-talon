@@ -75,7 +75,6 @@ void updateStatus(int force)
     }
 
     /* do these at least occasionally or especially often when busy */
-
     busy = ts == TS_SLEWING || ts == TS_HUNTING || ts == TS_LIMITING;
     if (doslow || busy || mjd < last_tbusy + COAST_DT)
     {

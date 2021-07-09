@@ -65,7 +65,6 @@ extern char tscfn[];
 extern char tdcfn[];
 extern char hcfn[];
 extern char ocfn[];
-extern char icfn[];
 extern char dcfn[];
 extern void init_cfg(void);
 extern void allstop(void);

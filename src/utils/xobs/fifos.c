@@ -121,21 +121,6 @@ int fifoRead(FifoId fid, char buf[], int buflen)
     return (v);
 }
 
-/* send all the daemons a reset command.
- * also reload our own info.
- * N.B. we assume there can not be any aux functions running.
- */
-void resetSW()
-{
-    /* read ours */
-    initCfg();
-
-    /* always send to all in case being turned off/on */
-    fifoMsg(Tel_Id, "Reset");
-    fifoMsg(Dome_Id, "Reset");
-    fifoMsg(Focus_Id, "Reset");
-}
-
 /* shut down all activity */
 void stop_all_devices()
 {

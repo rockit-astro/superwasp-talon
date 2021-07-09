@@ -244,7 +244,6 @@ static int findAll()
     /* see what we can do */
     if (altl && azl)
     {
-
         /* given alt/az, find other stuff */
         double ep, alt, az, ha, lst, ra, dec;
 

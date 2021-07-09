@@ -21,11 +21,7 @@ extern void die(void);
 
 /* config.c */
 extern void initCfg(void);
-extern char icfn[];
-extern int nfilt;
-extern int deffilt;
 extern double SUNDOWN;
-extern double DOMETOL, FLATTAZ, FLATTALT, FLATDAZ;
 extern double STOWALT, STOWAZ;
 extern char BANNER[80];
 
@@ -45,7 +41,6 @@ extern void domeCloseCB(Widget w, XtPointer client, XtPointer call);
 /* fifos.c */
 extern int fifoMsg(FifoId fid, char *fmt, ...);
 extern int fifoRead(FifoId fid, char buf[], int buflen);
-extern void resetSW(void);
 extern void stop_all_devices(void);
 extern void initPipes(void);
 extern void closePipes(void);
@@ -62,16 +57,14 @@ typedef enum
 extern Pixel ltcolors[LTN];
 extern Pixel editableColor;
 extern Pixel uneditableColor;
-extern void mkGUI(char *version);
+extern void mkGUI();
 extern int setColor(Widget w, char *resource, Pixel newp);
-extern void nyi(void);
 extern String fallbacks[];
 extern void setLt(Widget w, LtState s);
 extern Widget mkLight(Widget p_w);
 extern void msg(char *fmt, ...);
 extern void rmsg(char *line);
 extern void guiSensitive(int whether);
-extern void showEngmode();
 
 /* paddle.c */
 extern void pad_manage(void);
@@ -91,19 +84,9 @@ extern void s_track(Widget w, XtPointer client, XtPointer call);
 extern void s_goto(Widget w, XtPointer client, XtPointer call);
 extern void s_edit(Widget w, XtPointer client, XtPointer call);
 
-/* sound.c */
-extern int soundIsOn(void);
-extern void soundCB(Widget w, XtPointer client, XtPointer call);
-
 /* skymap.c */
 extern Widget mkSky(Widget p_w);
 extern void showSkyMap(void);
-
-/* telrun.c */
-extern int startTelrun(void);
-extern void stopTelrun(void);
-extern int chkTelrun(void);
-extern void monitorTelrun(int whether);
 
 /* tips.c */
 extern void wtip(Widget w, char *tip);
