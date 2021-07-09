@@ -572,7 +572,7 @@ static Widget mkScope(Widget main_w)
     Widget fr_w, f_w;
     Widget rc_w;
     Widget rrc_w, rf_w;
-    Widget l_w[3];
+    Widget l_w[2];
     Widget tf_w, lb_w;
     int i;
 
@@ -585,10 +585,10 @@ static Widget mkScope(Widget main_w)
     rf_w = XtVaCreateManagedWidget("SF", xmFormWidgetClass, rrc_w, NULL);
 
     l_w[0] = XtVaCreateManagedWidget("SSt", xmPushButtonWidgetClass, rf_w, NULL);
-    wltprintf(pbT, l_w[0], "Service");
-    XtAddCallback(l_w[0], XmNactivateCallback, s_service, NULL);
-    g_w[TSERV_W] = l_w[0];
-    wtip(l_w[0], "Slew to service position");
+    wltprintf(pbT, l_w[0], "Here");
+    XtAddCallback(l_w[0], XmNactivateCallback, s_here, NULL);
+    g_w[THERE_W] = l_w[0];
+    wtip(l_w[0], "Load all fields with current scope position");
 
     l_w[1] = XtVaCreateManagedWidget("SSv", xmPushButtonWidgetClass, rf_w, NULL);
     wltprintf(pbT, l_w[1], "Stow");
@@ -596,21 +596,16 @@ static Widget mkScope(Widget main_w)
     g_w[TSTOW_W] = l_w[1];
     wtip(l_w[1], "Slew to stow position");
 
-    l_w[2] = XtVaCreateManagedWidget("SGT", xmPushButtonWidgetClass, rf_w, NULL);
-    wltprintf(pbT, l_w[2], "Slew");
-    XtAddCallback(l_w[2], XmNactivateCallback, s_goto, NULL);
-    g_w[TGOTO_W] = l_w[2];
-    wtip(l_w[2], "Slew to coordinates and stop");
-
-    mkRow(rf_w, l_w, 3, 8);
+    mkRow(rf_w, l_w, 2, 8);
 
     rf_w = XtVaCreateManagedWidget("SF", xmFormWidgetClass, rrc_w, NULL);
 
-    l_w[0] = XtVaCreateManagedWidget("SSt", xmPushButtonWidgetClass, rf_w, NULL);
-    wltprintf(pbT, l_w[0], "Here");
-    XtAddCallback(l_w[0], XmNactivateCallback, s_here, NULL);
-    g_w[THERE_W] = l_w[0];
-    wtip(l_w[0], "Load all fields with current scope position");
+
+    l_w[0] = XtVaCreateManagedWidget("SGT", xmPushButtonWidgetClass, rf_w, NULL);
+    wltprintf(pbT, l_w[0], "Slew");
+    XtAddCallback(l_w[0], XmNactivateCallback, s_goto, NULL);
+    g_w[TGOTO_W] = l_w[0];
+    wtip(l_w[2], "Slew to coordinates and stop");
 
     l_w[1] = XtVaCreateManagedWidget("SGT", xmPushButtonWidgetClass, rf_w, NULL);
     wltprintf(pbT, l_w[1], "Track");
@@ -618,7 +613,7 @@ static Widget mkScope(Widget main_w)
     g_w[TTRACK_W] = l_w[1];
     wtip(l_w[2], "Slew to coordinates and track");
 
-    mkRow(rf_w, l_w, 3, 8);
+    mkRow(rf_w, l_w, 2, 8);
 
     rc_w = XtVaCreateManagedWidget("CRC", xmRowColumnWidgetClass, rrc_w, XmNmarginWidth, 0, XmNnumColumns, 2,
                                    XmNpacking, XmPACK_COLUMN, NULL);

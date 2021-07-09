@@ -80,24 +80,6 @@ void s_stow(Widget w, XtPointer client, XtPointer call)
     fifoMsg(Tel_Id, "Stow");
 }
 
-void s_service(Widget w, XtPointer client, XtPointer call)
-{
-    char altbuf[32], azbuf[32];
-
-    if (!rusure(toplevel_w, "slew to the service position"))
-        return;
-
-    fs_sexa(altbuf, raddeg(SERVICEALT), 3, 3600);
-    fs_sexa(azbuf, raddeg(SERVICEAZ), 3, 3600);
-    msg("Slewing to Alt %s Az %s", altbuf, azbuf);
-
-    XmTextFieldSetString(g_w[TALT_W], altbuf);
-    XmTextFieldSetString(g_w[TAZ_W], azbuf);
-    (void)findAll();
-
-    fifoMsg(Tel_Id, "Alt:%.6f Az:%.6f", SERVICEALT, SERVICEAZ);
-}
-
 /* valueChanged from one of the pointing TFs.
  * client is one of GUIWidgets.
  * clear out the incompatable fields unless s_updating is set.

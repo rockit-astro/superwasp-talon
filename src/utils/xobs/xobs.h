@@ -27,8 +27,6 @@ extern int deffilt;
 extern double SUNDOWN;
 extern double DOMETOL, FLATTAZ, FLATTALT, FLATDAZ;
 extern double STOWALT, STOWAZ;
-extern double SERVICEALT, SERVICEAZ;
-extern double MAXHA, MINALT, MAXDEC;
 extern char BANNER[80];
 
 /* control.c */
@@ -88,7 +86,6 @@ extern void rusure_seton(int whether);
 
 /* scope.c */
 extern void s_stow(Widget w, XtPointer client, XtPointer call);
-extern void s_service(Widget w, XtPointer client, XtPointer call);
 extern void s_here(Widget w, XtPointer client, XtPointer call);
 extern void s_track(Widget w, XtPointer client, XtPointer call);
 extern void s_goto(Widget w, XtPointer client, XtPointer call);

@@ -16,8 +16,6 @@
 double SUNDOWN;
 double STOWALT;
 double STOWAZ;
-double SERVICEALT;
-double SERVICEAZ;
 char BANNER[80];
 
 static char tscfn[] = "archive/config/telsched.cfg";
@@ -30,8 +28,6 @@ void initCfg()
         {"SUNDOWN", CFG_DBL, &SUNDOWN},
         {"STOWALT", CFG_DBL, &STOWALT},
         {"STOWAZ", CFG_DBL, &STOWAZ},
-        {"SERVICEALT", CFG_DBL, &SERVICEALT},
-        {"SERVICEAZ", CFG_DBL, &SERVICEAZ},
         {"BANNER", CFG_STR, BANNER, sizeof(BANNER)},
     };
 
