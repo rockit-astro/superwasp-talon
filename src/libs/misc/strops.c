@@ -130,7 +130,3 @@ char *cardDirLName(double a)
 
     return (sectors[(int)(a / 22.5)]);
 }
-
-/* For RCS Only -- Do Not Edit */
-static char *rcsid[2] = {(char *)rcsid,
-                         "@(#) $RCSfile: strops.c,v $ $Date: 2006/01/13 20:44:04 $ $Revision: 1.1.1.1 $ $Name:  $"};

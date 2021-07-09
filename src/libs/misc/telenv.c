@@ -177,7 +177,3 @@ static void getTELHOME()
     if (!telhome)
         telhome = telhome_def;
 }
-
-/* For RCS Only -- Do Not Edit */
-static char *rcsid[2] = {(char *)rcsid,
-                         "@(#) $RCSfile: telenv.c,v $ $Date: 2006/01/13 20:44:04 $ $Revision: 1.1.1.1 $ $Name:  $"};

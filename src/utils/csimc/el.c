@@ -305,7 +305,3 @@ int main(int ac, char *av[])
 }
 
 #endif /* TESTEL */
-
-/* For RCS Only -- Do Not Edit */
-static char *rcsid[2] = {(char *)rcsid,
-                         "@(#) $RCSfile: el.c,v $ $Date: 2006/01/13 20:42:16 $ $Revision: 1.1.1.1 $ $Name:  $"};

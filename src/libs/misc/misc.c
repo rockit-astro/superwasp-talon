@@ -63,7 +63,3 @@ double utc_now(np) Now *np;
 {
     return ((np->n_mjd - mjd_day(np->n_mjd)) * 24.0);
 }
-
-/* For RCS Only -- Do Not Edit */
-static char *rcsid[2] = {(char *)rcsid,
-                         "@(#) $RCSfile: misc.c,v $ $Date: 2006/01/13 20:44:03 $ $Revision: 1.1.1.1 $ $Name:  $"};

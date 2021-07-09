@@ -31,7 +31,3 @@ extern void dio96_setbit(int n);
 extern void dio96_clrbit(int n);
 
 extern int dio96_trace;
-
-/* For RCS Only -- Do Not Edit
- * @(#) $RCSfile: dio.h,v $ $Date: 2006/01/13 20:44:03 $ $Revision: 1.1.1.1 $ $Name:  $
- */

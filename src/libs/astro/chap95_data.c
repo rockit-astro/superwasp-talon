@@ -1386,7 +1386,3 @@ chap95_rec chap95_pluto[] = {
         /* end pluto */ -1,
     },
 };
-
-/* For RCS Only -- Do Not Edit */
-static char *rcsid[2] = {
-    (char *)rcsid, "@(#) $RCSfile: chap95_data.c,v $ $Date: 2006/01/13 20:43:54 $ $Revision: 1.1.1.1 $ $Name:  $"};

@@ -382,7 +382,3 @@ double TSINCE;
     dpos->y = RDOTK * UY + RFDOTK * VY;
     dpos->z = RDOTK * UZ + RFDOTK * VZ;
 }
-
-/* For RCS Only -- Do Not Edit */
-static char *rcsid[2] = {(char *)rcsid,
-                         "@(#) $RCSfile: sgp4.c,v $ $Date: 2006/01/13 20:43:57 $ $Revision: 1.1.1.1 $ $Name:  $"};

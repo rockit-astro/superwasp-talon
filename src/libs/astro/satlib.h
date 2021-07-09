@@ -3,8 +3,6 @@
 
 #include "sattypes.h"
 
-/* $Id: satlib.h,v 1.1.1.1 2006/01/13 20:43:56 jmi Exp $ */
-
 typedef struct _SatElem
 {
     float se_XMO;
@@ -209,7 +207,3 @@ void sgp4(SatData *sat, Vec3 *pos, Vec3 *dpos, double t);
 void sdp4(SatData *sat, Vec3 *pos, Vec3 *dpos, double TSINCE);
 
 #endif /* __SATLIB_H */
-
-/* For RCS Only -- Do Not Edit
- * @(#) $RCSfile: satlib.h,v $ $Date: 2006/01/13 20:43:56 $ $Revision: 1.1.1.1 $ $Name:  $
- */

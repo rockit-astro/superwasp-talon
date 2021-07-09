@@ -1750,7 +1750,3 @@ static CInfo *CFD2CIP(int fd)
     daemonLog("fd %d disappeared!\n", fd);
     exit(1);
 }
-
-/* For RCS Only -- Do Not Edit */
-static char *rcsid[2] = {(char *)rcsid,
-                         "@(#) $RCSfile: csimcd.c,v $ $Date: 2006/01/13 20:42:16 $ $Revision: 1.1.1.1 $ $Name:  $"};

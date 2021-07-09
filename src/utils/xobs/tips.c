@@ -355,7 +355,3 @@ static void tip_sort()
         qsort((void *)tips, ntips, sizeof(Tip), tip_sf);
     tips_sorted = 1;
 }
-
-/* For RCS Only -- Do Not Edit */
-static char *rcsid[2] = {(char *)rcsid,
-                         "@(#) $RCSfile: tips.c,v $ $Date: 2006/01/13 20:42:47 $ $Revision: 1.1.1.1 $ $Name:  $"};

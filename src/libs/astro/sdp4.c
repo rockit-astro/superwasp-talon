@@ -423,7 +423,3 @@ double TSINCE;
     /*      RETURN
           END */
 }
-
-/* For RCS Only -- Do Not Edit */
-static char *rcsid[2] = {(char *)rcsid,
-                         "@(#) $RCSfile: sdp4.c,v $ $Date: 2006/01/13 20:43:57 $ $Revision: 1.1.1.1 $ $Name:  $"};

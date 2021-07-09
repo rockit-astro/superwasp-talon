@@ -2,8 +2,6 @@
 
 #include "deepconst.h"
 
-/* @(#) $Id: thetag.c,v 1.1.1.1 2006/01/13 20:43:57 jmi Exp $ */
-
 /*
  *      FUNCTION THETAG(EP)
  *      COMMON /E1/XMO,XNODEO,OMEGAO,EO,XINCL,XNO,XNDT2O,XNDD6O,BSTAR,
@@ -83,7 +81,3 @@ void main(int argc, char **argv) {
     }
 }
 #endif
-
-/* For RCS Only -- Do Not Edit */
-static char *rcsid[2] = {(char *)rcsid,
-                         "@(#) $RCSfile: thetag.c,v $ $Date: 2006/01/13 20:43:57 $ $Revision: 1.1.1.1 $ $Name:  $"};

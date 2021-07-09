@@ -245,7 +245,3 @@ void range(v, r) double *v, r;
 {
     *v -= r * floor(*v / r);
 }
-
-/* For RCS Only -- Do Not Edit */
-static char *rcsid[2] = {(char *)rcsid,
-                         "@(#) $RCSfile: mjd.c,v $ $Date: 2006/01/13 20:43:55 $ $Revision: 1.1.1.1 $ $Name:  $"};

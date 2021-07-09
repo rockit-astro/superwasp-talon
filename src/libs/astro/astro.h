@@ -163,7 +163,3 @@ extern void gst_utc P_((double mjd, double gst, double *utc));
 
 /* vsop87.c */
 extern int vsop87 P_((double mjd, int obj, double prec, double *ret));
-
-/* For RCS Only -- Do Not Edit
- * @(#) $RCSfile: astro.h,v $ $Date: 2006/01/13 20:43:53 $ $Revision: 1.1.1.1 $ $Name:  $
- */

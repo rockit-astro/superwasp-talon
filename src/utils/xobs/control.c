@@ -355,7 +355,3 @@ static void limitCB(Widget w, XtPointer client, XtPointer call)
         fifoMsg(Tel_Id, "limits%.*s", naxcodes, axcodes);
     }
 }
-
-/* For RCS Only -- Do Not Edit */
-static char *rcsid[2] = {(char *)rcsid,
-                         "@(#) $RCSfile: control.c,v $ $Date: 2006/01/13 20:42:46 $ $Revision: 1.1.1.1 $ $Name:  $"};

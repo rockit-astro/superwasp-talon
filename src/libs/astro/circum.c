@@ -747,7 +747,3 @@ static double h_albsize(H) double H;
 {
     return (3600 * raddeg(.707 * 1500 * pow(2.51, (18 - H) / 2) / MAU));
 }
-
-/* For RCS Only -- Do Not Edit */
-static char *rcsid[2] = {(char *)rcsid,
-                         "@(#) $RCSfile: circum.c,v $ $Date: 2006/01/13 20:43:54 $ $Revision: 1.1.1.1 $ $Name:  $"};

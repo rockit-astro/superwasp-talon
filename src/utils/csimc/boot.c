@@ -387,7 +387,3 @@ static int chkVersion(int vn, int addr)
     csi_close(fd);
     return (0);
 }
-
-/* For RCS Only -- Do Not Edit */
-static char *rcsid[2] = {(char *)rcsid,
-                         "@(#) $RCSfile: boot.c,v $ $Date: 2006/01/13 20:42:15 $ $Revision: 1.1.1.1 $ $Name:  $"};

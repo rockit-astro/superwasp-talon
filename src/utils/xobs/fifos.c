@@ -249,7 +249,3 @@ XtInputId *idp;                                            /* pointer to input i
     updateStatus(1);
     check_dome_reply(rv, buf);
 }
-
-/* For RCS Only -- Do Not Edit */
-static char *rcsid[2] = {(char *)rcsid,
-                         "@(#) $RCSfile: fifos.c,v $ $Date: 2006/01/13 20:42:46 $ $Revision: 1.1.1.1 $ $Name:  $"};

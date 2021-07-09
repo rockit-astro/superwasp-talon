@@ -149,7 +149,3 @@ extern void cli_move_telescope(void);
 extern void cli_move_dome(void);
 extern void cli_move_cam(void);
 extern void cli_move_lights(void);
-
-/* For RCS Only -- Do Not Edit
- * @(#) $RCSfile: xobs.h,v $ $Date: 2006/01/13 20:42:48 $ $Revision: 1.1.1.1 $ $Name:  $
- */

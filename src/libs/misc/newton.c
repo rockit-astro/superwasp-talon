@@ -81,7 +81,3 @@ int main(int ac, char *av[])
     return (0);
 }
 #endif /* TEST_IT */
-
-/* For RCS Only -- Do Not Edit */
-static char *rcsid[2] = {(char *)rcsid,
-                         "@(#) $RCSfile: newton.c,v $ $Date: 2006/01/13 20:44:03 $ $Revision: 1.1.1.1 $ $Name:  $"};

@@ -37,7 +37,3 @@ double mm_mjed(np) Now *np;
 {
     return (mjd + deltat(mjd) / 86400.0);
 }
-
-/* For RCS Only -- Do Not Edit */
-static char *rcsid[2] = {(char *)rcsid,
-                         "@(#) $RCSfile: auxil.c,v $ $Date: 2006/01/13 20:43:53 $ $Revision: 1.1.1.1 $ $Name:  $"};

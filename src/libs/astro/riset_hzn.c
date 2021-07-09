@@ -472,7 +472,3 @@ static double hzn0()
 {
     return (0.);
 }
-
-/* For RCS Only -- Do Not Edit */
-static char *rcsid[2] = {(char *)rcsid,
-                         "@(#) $RCSfile: riset_hzn.c,v $ $Date: 2006/01/13 20:43:56 $ $Revision: 1.1.1.1 $ $Name:  $"};

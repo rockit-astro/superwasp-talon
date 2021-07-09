@@ -46,7 +46,3 @@ extern int photStdRead(FILE *fp, PStdStar **spp);
 extern void photFree(PStdStar *sp, int n);
 extern int photReadCalConst(FILE *fp, double jd, double jdwin, PCalConst *cp, double *foundjdp, char *msg);
 extern int photReadDefCalConst(FILE *fp, PCalConst *cp, double *Bp, double *Vp, double *Rp, double *Ip, char *msg);
-
-/* For RCS Only -- Do Not Edit
- * @(#) $RCSfile: photstd.h,v $ $Date: 2006/01/13 20:44:03 $ $Revision: 1.1.1.1 $ $Name:  $
- */

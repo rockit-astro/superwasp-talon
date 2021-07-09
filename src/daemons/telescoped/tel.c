@@ -2032,7 +2032,3 @@ int tel_ishomed(void)
 
     return (ok);
 }
-
-/* For RCS Only -- Do Not Edit */
-static char *rcsid[2] = {(char *)rcsid,
-                         "@(#) $RCSfile: tel.c,v $ $Date: 2006/01/13 20:43:24 $ $Revision: 1.1.1.1 $ $Name:  $"};

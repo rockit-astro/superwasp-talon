@@ -42,7 +42,3 @@ void domeCloseCB(Widget w, XtPointer client, XtPointer call)
     cli_move_dome();
     fifoMsg(Dome_Id, "close");
 }
-
-/* For RCS Only -- Do Not Edit */
-static char *rcsid[2] = {(char *)rcsid,
-                         "@(#) $RCSfile: dome.c,v $ $Date: 2006/01/13 20:42:46 $ $Revision: 1.1.1.1 $ $Name:  $"};

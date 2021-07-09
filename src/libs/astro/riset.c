@@ -103,7 +103,3 @@ int *status;
     /* OK */
     *status = 0;
 }
-
-/* For RCS Only -- Do Not Edit */
-static char *rcsid[2] = {(char *)rcsid,
-                         "@(#) $RCSfile: riset.c,v $ $Date: 2006/01/13 20:43:56 $ $Revision: 1.1.1.1 $ $Name:  $"};

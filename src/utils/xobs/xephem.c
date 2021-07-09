@@ -143,7 +143,3 @@ static void inFifoCB(XtPointer client, XtIntervalId *id)
     /* repeat */
     XtAppAddTimeOut(app, XE_INPER, inFifoCB, 0);
 }
-
-/* For RCS Only -- Do Not Edit */
-static char *rcsid[2] = {(char *)rcsid,
-                         "@(#) $RCSfile: xephem.c,v $ $Date: 2006/01/13 20:42:47 $ $Revision: 1.1.1.1 $ $Name:  $"};

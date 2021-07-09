@@ -1020,7 +1020,3 @@ char *bp;
 
     return (bp - bpsave);
 }
-
-/* For RCS Only -- Do Not Edit */
-static char *rcsid[2] = {(char *)rcsid,
-                         "@(#) $RCSfile: dbfmt.c,v $ $Date: 2006/01/13 20:43:54 $ $Revision: 1.1.1.1 $ $Name:  $"};

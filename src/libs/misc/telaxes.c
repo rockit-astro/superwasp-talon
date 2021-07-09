@@ -522,7 +522,3 @@ int main(int ac, char *av[])
     return (0);
 }
 #endif /* TEST_IT */
-
-/* For RCS Only -- Do Not Edit */
-static char *rcsid[2] = {(char *)rcsid,
-                         "@(#) $RCSfile: telaxes.c,v $ $Date: 2006/01/13 20:44:04 $ $Revision: 1.1.1.1 $ $Name:  $"};

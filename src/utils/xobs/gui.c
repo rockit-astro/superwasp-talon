@@ -941,7 +941,3 @@ static void mkGC()
 {
     guigc = XCreateGC(XtDisplay(toplevel_w), XtWindow(toplevel_w), 0L, NULL);
 }
-
-/* For RCS Only -- Do Not Edit */
-static char *rcsid[2] = {(char *)rcsid,
-                         "@(#) $RCSfile: gui.c,v $ $Date: 2006/01/13 20:42:47 $ $Revision: 1.1.1.1 $ $Name:  $"};

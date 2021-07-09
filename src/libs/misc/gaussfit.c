@@ -138,7 +138,3 @@ int main(int ac, char *av[])
 }
 
 #endif
-
-/* For RCS Only -- Do Not Edit */
-static char *rcsid[2] = {(char *)rcsid,
-                         "@(#) $RCSfile: gaussfit.c,v $ $Date: 2006/01/13 20:44:03 $ $Revision: 1.1.1.1 $ $Name:  $"};

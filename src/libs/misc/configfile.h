@@ -27,7 +27,3 @@ extern int writeCfgFile(char *fn, char *name, char *value, char *cmt);
 extern int nextPair(FILE *fp, char fn[], char name[], int maxname, char value[], int maxvalue);
 extern int readFilenames(char *fn, char ***fnames);
 extern void decomposeFN(char *fn, char dir[], char base[], char ext[]);
-
-/* For RCS Only -- Do Not Edit
- * @(#) $RCSfile: configfile.h,v $ $Date: 2006/01/13 20:44:02 $ $Revision: 1.1.1.1 $ $Name:  $
- */

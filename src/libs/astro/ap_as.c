@@ -55,7 +55,3 @@ double *rap, *decp;
     *rap = o.s_ra;
     *decp = o.s_dec;
 }
-
-/* For RCS Only -- Do Not Edit */
-static char *rcsid[2] = {(char *)rcsid,
-                         "@(#) $RCSfile: ap_as.c,v $ $Date: 2006/01/13 20:43:53 $ $Revision: 1.1.1.1 $ $Name:  $"};

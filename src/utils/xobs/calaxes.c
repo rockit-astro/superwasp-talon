@@ -749,7 +749,3 @@ static void findHD(int i)
 
     aa_hadec(n.n_lat, op->s_alt, op->s_az, &objs[i].ha, &objs[i].dec);
 }
-
-/* For RCS Only -- Do Not Edit */
-static char *rcsid[2] = {(char *)rcsid,
-                         "@(#) $RCSfile: calaxes.c,v $ $Date: 2006/01/13 20:42:46 $ $Revision: 1.1.1.1 $ $Name:  $"};

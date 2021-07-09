@@ -1,8 +1,6 @@
 #ifndef __SATTYPES_H
 #define __SATTYPES_H
 
-/* $Id: sattypes.h,v 1.1.1.1 2006/01/13 20:43:56 jmi Exp $ */
-
 typedef struct _Vec3
 {
     double x, y, z;
@@ -23,7 +21,3 @@ typedef struct _Geoloc
 } GeoLoc;
 
 #endif /* __SATTYPES_H */
-
-/* For RCS Only -- Do Not Edit
- * @(#) $RCSfile: sattypes.h,v $ $Date: 2006/01/13 20:43:56 $ $Revision: 1.1.1.1 $ $Name:  $
- */

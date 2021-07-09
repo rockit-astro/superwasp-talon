@@ -530,7 +530,3 @@ static void readFocus()
         mip->cpos = (2 * PI) * mip->sign * mip->raw / mip->step;
     }
 }
-
-/* For RCS Only -- Do Not Edit */
-static char *rcsid[2] = {(char *)rcsid,
-                         "@(#) $RCSfile: focus.c,v $ $Date: 2006/01/13 20:43:23 $ $Revision: 1.1.1.1 $ $Name:  $"};

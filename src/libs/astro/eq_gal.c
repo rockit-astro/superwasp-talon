@@ -99,7 +99,3 @@ static void galeq_init()
         before = 1;
     }
 }
-
-/* For RCS Only -- Do Not Edit */
-static char *rcsid[2] = {(char *)rcsid,
-                         "@(#) $RCSfile: eq_gal.c,v $ $Date: 2006/01/13 20:43:54 $ $Revision: 1.1.1.1 $ $Name:  $"};

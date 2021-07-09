@@ -139,7 +139,3 @@ static void logCB(XtPointer client, XtIntervalId *id)
     /* repeat */
     pollId = XtAppAddTimeOut(app, LOGPOLL, logCB, 0);
 }
-
-/* For RCS Only -- Do Not Edit */
-static char *rcsid[2] = {(char *)rcsid,
-                         "@(#) $RCSfile: telrun.c,v $ $Date: 2006/01/13 20:42:47 $ $Revision: 1.1.1.1 $ $Name:  $"};

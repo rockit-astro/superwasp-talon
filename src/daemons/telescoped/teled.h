@@ -71,7 +71,3 @@ extern void init_cfg(void);
 extern void allstop(void);
 extern void tdlog(char *fmt, ...);
 extern void die(void);
-
-/* For RCS Only -- Do Not Edit
- * @(#) $RCSfile: teled.h,v $ $Date: 2006/01/13 20:43:24 $ $Revision: 1.1.1.1 $ $Name:  $
- */
