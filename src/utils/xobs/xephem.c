@@ -81,7 +81,6 @@ static void xephemCB(XtPointer client, int *fd, XtInputId *id)
         return;
 
     /* start tracking it */
-    cli_move_telescope();
     fifoMsg(Tel_Id, "%s", buf);
 
     /* comfort the user */

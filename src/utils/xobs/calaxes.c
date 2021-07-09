@@ -613,7 +613,6 @@ static int installNew()
     }
 
     /* inform the Tel fifo to reread the config file */
-    cli_move_telescope();
     fifoMsg(Tel_Id, "%s", "Reset");
 
     /* done */

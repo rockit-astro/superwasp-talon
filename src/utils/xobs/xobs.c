@@ -158,7 +158,6 @@ int main(int ac, char *av[])
     initCfg();
     initShm();
     initXEphem();
-    initCli();
     mkGUI(version);
 
     /* connect fifos if alone and no telrun running */
@@ -187,7 +186,6 @@ int main(int ac, char *av[])
 
 void die()
 {
-    cleanupCli();
     unlock_running(progname, 0);
     exit(0);
 }

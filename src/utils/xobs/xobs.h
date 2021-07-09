@@ -135,17 +135,3 @@ extern void updateStatus(int force);
 
 /* xephem.c */
 extern void initXEphem(void);
-
-/* cli.c */
-extern void initCli(void);
-extern void cleanupCli(void);
-
-/* clicommands.c */
-extern void check_tel_reply(int, char *);
-extern void check_dome_reply(int, char *);
-extern void check_cam_reply(int, char *);
-extern void check_lights_reply(int, char *);
-extern void cli_move_telescope(void);
-extern void cli_move_dome(void);
-extern void cli_move_cam(void);
-extern void cli_move_lights(void);

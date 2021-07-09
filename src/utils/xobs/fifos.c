@@ -131,8 +131,6 @@ void resetSW()
     initCfg();
 
     /* always send to all in case being turned off/on */
-    cli_move_telescope();
-    cli_move_dome();
     fifoMsg(Tel_Id, "Reset");
     fifoMsg(Dome_Id, "Reset");
     fifoMsg(Focus_Id, "Reset");
@@ -141,13 +139,9 @@ void resetSW()
 /* shut down all activity */
 void stop_all_devices()
 {
-    cli_move_telescope();
     fifoMsg(Tel_Id, "Stop");
     if (telstatshmp->shutterstate != SH_ABSENT)
-    {
-        cli_move_dome();
         fifoMsg(Dome_Id, "Stop");
-    }
     if (OMOT->have)
         fifoMsg(Focus_Id, "Stop");
 }
@@ -217,7 +211,6 @@ XtInputId *idp;                                           /* pointer to input id
     rv = fifoRead(Tel_Id, buf, sizeof(buf));
     msg("Telescope: %s", buf);
     updateStatus(1);
-    check_tel_reply(rv, buf);
 }
 
 /* called whenever we get input from the Focus fifo */
@@ -247,5 +240,4 @@ XtInputId *idp;                                            /* pointer to input i
     msg("Dome: %s", buf);
 
     updateStatus(1);
-    check_dome_reply(rv, buf);
 }

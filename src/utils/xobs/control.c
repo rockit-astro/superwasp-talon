@@ -303,20 +303,13 @@ static void homeCB(Widget w, XtPointer client, XtPointer call)
             if (hip->telaxcode)
                 axcodes[naxcodes++] = hip->telaxcode;
             else
-            {
-                cli_move_telescope();
-                cli_move_dome();
                 fifoMsg(hip->fid, "home");
-            }
             msg("Seeking %s home", hip->name);
         }
     }
 
     if (naxcodes > 0)
-    {
-        cli_move_telescope();
         fifoMsg(Tel_Id, "home%.*s", naxcodes, axcodes);
-    }
 }
 
 /* called from any of the PB in the limit dialog.
@@ -340,18 +333,11 @@ static void limitCB(Widget w, XtPointer client, XtPointer call)
             if (hip->telaxcode)
                 axcodes[naxcodes++] = hip->telaxcode;
             else
-            {
-                cli_move_telescope();
-                cli_move_dome();
                 fifoMsg(hip->fid, "limits");
-            }
             msg("Seeking %s limits", hip->name);
         }
     }
 
     if (naxcodes > 0)
-    {
-        cli_move_telescope();
         fifoMsg(Tel_Id, "limits%.*s", naxcodes, axcodes);
-    }
 }

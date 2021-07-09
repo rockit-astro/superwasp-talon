@@ -431,15 +431,9 @@ static void armArrow(Widget w)
     if (XmToggleButtonGetState(roof_w))
     {
         if (w == n_w)
-        {
-            cli_move_dome();
             fifoMsg(Dome_Id, "Open");
-        }
         if (w == s_w)
-        {
-            cli_move_dome();
             fifoMsg(Dome_Id, "Close");
-        }
         if (w == e_w)
             fifoMsg(Dome_Id, "j+");
         if (w == w_w)

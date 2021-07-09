@@ -4,9 +4,6 @@ project (xobs)
 set(XOBS_SRC 
         xobs.c 
         calaxes.c 
-        cli.c
-        clicommands.c
-        cliutil.c
         config.c 
         control.c 
         dome.c 

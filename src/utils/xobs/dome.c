@@ -28,7 +28,6 @@ void domeOpenCB(Widget w, XtPointer client, XtPointer call)
     if (!rusure(toplevel_w, "open the roof"))
         return;
 
-    cli_move_dome();
     fifoMsg(Dome_Id, "open");
     msg("Opening dome");
 }
@@ -39,6 +38,5 @@ void domeCloseCB(Widget w, XtPointer client, XtPointer call)
         return;
 
     msg("Closing dome");
-    cli_move_dome();
     fifoMsg(Dome_Id, "close");
 }

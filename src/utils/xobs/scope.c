@@ -84,7 +84,6 @@ void s_stow(Widget w, XtPointer client, XtPointer call)
 
         fifoMsg (Tel_Id, "Alt:%.5f Az:%.6f", STOWALT, STOWAZ);
     */
-    cli_move_telescope();
     fifoMsg(Tel_Id, "Stow");
 }
 
@@ -103,7 +102,6 @@ void s_service(Widget w, XtPointer client, XtPointer call)
     XmTextFieldSetString(g_w[TAZ_W], azbuf);
     (void)findAll();
 
-    cli_move_telescope();
     fifoMsg(Tel_Id, "Alt:%.6f Az:%.6f", SERVICEALT, SERVICEAZ);
 }
 
@@ -206,7 +204,6 @@ void s_track(Widget w, XtPointer client, XtPointer call)
 
         db_write_line(&byname, buf);
 
-        cli_move_telescope();
         fifoMsg(Tel_Id, "%s", buf);
         msg("Hunting for %s", byname.o_name);
     }
@@ -228,14 +225,12 @@ void s_track(Widget w, XtPointer client, XtPointer call)
 
         if (strcwcmp(epochstr, "eod") == 0)
         {
-            cli_move_telescope();
             fifoMsg(Tel_Id, "RA:%.6f Dec:%.6f", ra, dec);
             msg("Hunting for %s %s", rastr, decstr);
         }
         else
         {
             double ep = atof(epochstr);
-            cli_move_telescope();
             fifoMsg(Tel_Id, "RA:%.6f Dec:%.6f Epoch:%g", ra, dec, ep);
             msg("Hunting for %s %s %g", rastr, decstr, ep);
         }
@@ -266,7 +261,6 @@ void s_goto(Widget w, XtPointer client, XtPointer call)
     az = degrad(az);
 
     msg("Slewing to %s %s", altstr, azstr);
-    cli_move_telescope();
     fifoMsg(Tel_Id, "Alt:%.6f Az:%.6f", alt, az);
 
     XtFree(altstr);
