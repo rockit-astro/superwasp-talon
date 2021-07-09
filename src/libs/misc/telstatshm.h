@@ -107,6 +107,13 @@ typedef enum
     SH_CLOSED   /* shutter is closed */
 } DShState;
 
+typedef enum
+{
+    H_DISABLED,
+    H_ENABLED,
+    H_TRIPPED
+} DHeartbeatState;
+
 /* current state of everything.
  * H refers to the telescope axis of "longitude", be it HA or Az.
  * D refers to the telescope axis of "latitude", be it Dec or Alt.
@@ -150,8 +157,8 @@ typedef struct
      */
 
     DShState shutterstate; /* shutter state */
-
-    /* Dome alarm */
+    DHeartbeatState domeheartbeatstate;
+    int domeheartbeatremaining;
     int domealarm;
 } TelStatShm;
 

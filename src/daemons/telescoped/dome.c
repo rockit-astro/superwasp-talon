@@ -35,11 +35,7 @@
 
 /* config entries */
 static int DOMEAXIS;
-static double DOMETO;
-static double DOMEMOFFSET;
 static double SHUTTERTO;
-static double SHUTTERAZ;
-static double SHUTTERAZTOL;
 
 static double dome_to; /* mjd when operation will timeout */
 
@@ -53,28 +49,15 @@ static void dome_open(int first, ...);
 static void dome_close(int first, ...);
 static void dome_stop(int first, ...);
 static void dome_alarmset(int first, int alon);
+static void dome_heartbeatset(int first, int heartbeat);
 
 /* helped along by these... */
-static int d_emgstop(char *msg);
-static int d_chkWx(char *msg);
-static void d_readpos(void);
-static void d_auto(void);
-static double d_telaz(void);
-static void d_cw(void);
-static void d_ccw(void);
+static int d_chkHeartbeat(char *msg);
 static void d_stop(void);
 static void initCfg(void);
 static void openChannels(void);
 static void closeChannels(void);
-
-static void d_readshpos(void);
 static void d_getalarm(void);
-
-/* later entries */
-static int d_goShutterPower(void);
-static char *doorType(void);
-static char *enclType(void);
-static int setaz_error = 0; // set if there is an error during dome_setaz, used by goShutterPower
 
 /* handy shortcuts */
 #define SS (telstatshmp->shutterstate)
@@ -83,6 +66,7 @@ static int setaz_error = 0; // set if there is an error during dome_setaz, used 
 
 /* control and status connections */
 static int cfd, sfd;
+static time_t heartbeat_timeout;
 
 /* called when we receive a message from the Dome fifo plus periodically with
  *   !msg to just update things.
@@ -92,7 +76,7 @@ void dome_msg(msg) char *msg;
 {
     char jog_dir[2];
     double az;
-    int alon;
+    int alon, heartbeat;
 
     /* do reset before checking for `have' to allow for new config file */
     if (msg && strncasecmp(msg, "reset", 5) == 0)
@@ -122,8 +106,14 @@ void dome_msg(msg) char *msg;
         return;
     }
 
+    if (msg && sscanf(msg, "heartbeat %d", &heartbeat) == 1)
+    {
+        dome_heartbeatset(1, heartbeat);
+        return;
+    }
+
     /* top priority are emergency stop and weather alerts */
-    if (d_emgstop(msg))
+    if (d_chkHeartbeat(msg))
         return;
 
     /* handle normal messages and polling */
@@ -207,17 +197,6 @@ static void dome_reset(int first, ...)
         fifoWrite(Dome_Id, 0, "Not installed");
 }
 
-/* Some terminology about door... if we have a dome, it's a shutter, if not it's a roof...*/
-static char *doorType(void)
-{
-    return ("shutter");
-}
-
-static char *enclType(void)
-{
-    return ("roof");
-}
-
 /* open shutter or roof */
 static void dome_open(int first, ...)
 {
@@ -228,7 +207,13 @@ static void dome_open(int first, ...)
     /* nothing to do if no shutter */
     if (!SHAVE)
     {
-        fifoWrite(Dome_Id, -3, "No %s to open", doorType());
+        fifoWrite(Dome_Id, -3, "No roof to open");
+        return;
+    }
+
+    if (telstatshmp->domeheartbeatstate == H_TRIPPED)
+    {
+        fifoWrite(Dome_Id, -10, "Open error: heartbeat monitor has tripped");
         return;
     }
 
@@ -333,7 +318,7 @@ static void dome_close(int first, ...)
     /* nothing to do if no shutter */
     if (!SHAVE)
     {
-        fifoWrite(Dome_Id, -3, "No %s to close", doorType());
+        fifoWrite(Dome_Id, -3, "No roof to close");
         return;
     }
 
@@ -441,7 +426,7 @@ static void dome_stop(int first, ...)
     if (first)
     {
         d_stop();
-        dome_to = mjd + DOMETO;
+        dome_to = mjd + SHUTTERTO;
         active_func = dome_stop;
     }
 
@@ -483,41 +468,68 @@ static void dome_alarmset(int first, int alon)
     }
 }
 
-/* middle-layer support functions */
-
-/* check the emergency stop bit.
- * while on, stop everything and return 1, else return 0
- */
-static int d_emgstop(char *msg)
+static void dome_heartbeatset(int first, int heartbeat)
 {
-
-    /* NOTE: History here is that "roofestop" calls made this frequently
-       cause a problem with the CSI interface / buffer flow.
-       Emergency stop detection is disabled in this version.
-       This has not been thoroughly revisited -- may be able to make work
-    */
-
-    int on;
-
-    on = (SMOVING);
-    if (!on)
+    if (!SHAVE)
     {
-        return (0); // don't check estop if not moving
+        fifoWrite(Dome_Id, 0, "Ok, but really no shutter");
+        return;
     }
 
-    // this will set a variable (e) that we will subsequently read
-    //	csi_w (cfd, "roofestop();");
-    //	on &= csi_rix(sfd, "=e;");
-
-    on = 0;
-
-    if (!on)
+    if (heartbeat > 600)
     {
+        fifoWrite(Dome_Id, -10, "Heartbeat error: timeout must be less than 600s");
+        return;
+    }
+
+    if (heartbeat > 0 && telstatshmp->domeheartbeatstate == H_TRIPPED)
+    {
+        fifoWrite(Dome_Id, -11, "Heartbeat error: heartbeat monitor has tripped");
+        return;
+    }
+
+    telstatshmp->domeheartbeatremaining = heartbeat;
+    if (heartbeat > 0)
+    {
+        telstatshmp->domeheartbeatstate = H_ENABLED;
+        heartbeat_timeout = time(NULL) + heartbeat;
+
+        fifoWrite(Dome_Id, 0, "Dome heartbeat expires at %zu", heartbeat_timeout);
+    }
+    else
+    {
+        telstatshmp->domeheartbeatstate = H_DISABLED;
+        heartbeat_timeout = 0;
+        fifoWrite(Dome_Id, 0, "Dome heartbeat disabled");
+    }
+}
+
+/* middle-layer support functions */
+
+/* if the close heartbeat has expired return 1, else return 0 */
+static int d_chkHeartbeat(char *msg)
+{
+    if (!SHAVE || telstatshmp->domeheartbeatstate != H_ENABLED)
+        return (0);
+
+    time_t now = time(NULL);
+    if (heartbeat_timeout > now)
+    {
+        telstatshmp->domeheartbeatremaining = heartbeat_timeout - time(NULL);
         return (0);
     }
 
-    if (msg || (active_func && active_func != dome_stop))
-        fifoWrite(Dome_Id, -15, "Command cancelled.. emergency stop is active");
+    telstatshmp->domeheartbeatstate = H_TRIPPED;
+    telstatshmp->domeheartbeatremaining = -1;
+
+    if (msg || (active_func && active_func != dome_close))
+        fifoWrite(Dome_Id, -16, "Command cancelled.. dome heartbeat has tripped");
+
+    if (active_func != dome_close && SS != SH_CLOSED)
+    {
+        fifoWrite(Dome_Id, 9, "Dome heartbeat has tripped -- closing roof");
+        dome_close(1);
+    }
 
     dome_poll();
 
@@ -551,11 +563,8 @@ static void initCfg()
 
     static CfgEntry dcfg[] = {
         {"DOMEAXIS", CFG_INT, &DOMEAXIS},
-        {"DOMETO", CFG_DBL, &DOMETO},
         {"SHUTTERHAVE", CFG_INT, &SHUTTERHAVE},
         {"SHUTTERTO", CFG_DBL, &SHUTTERTO},
-        {"SHUTTERAZ", CFG_DBL, &SHUTTERAZ},
-        {"SHUTTERAZTOL", CFG_DBL, &SHUTTERAZTOL},
     };
     int n;
 
@@ -625,29 +634,6 @@ static void closeChannels()
     else
     {
         sfd = cfd = 0;
-    }
-}
-
-static void d_readshpos()
-{
-    int pos;
-
-    if (!SHAVE || virtual_mode)
-        return;
-
-    tdlog("Getting shutter status");
-
-    pos = csi_rix(sfd, "=get_shutter_status();");
-
-    tdlog("Got dome position %d", pos);
-
-    if (pos == 1)
-    {
-        SS = SH_OPEN;
-    }
-    else if (pos == 2)
-    {
-        SS = SH_CLOSED;
     }
 }
 
