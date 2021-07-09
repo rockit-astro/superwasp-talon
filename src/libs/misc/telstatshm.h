@@ -3,6 +3,7 @@
 #ifndef TELSTATSHM_H
 #define TELSTATSHM_H
 
+#include <sys/types.h>
 #include "circum.h"
 
 /* shared memory key; can be anything unlikely ;-)
@@ -120,6 +121,8 @@ typedef enum
  */
 typedef struct
 {
+    pid_t telescoped_pid;
+
     /* time info */
     Now now; /* current time and location info */
     int dt;  /* update period, ms */

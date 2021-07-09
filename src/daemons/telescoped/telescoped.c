@@ -294,6 +294,9 @@ static void init_shm()
 
     /* always zero when we start */
     memset((void *)addr, 0, len);
+
+    /* store the PID of this process */
+    telstatshmp->telescoped_pid = getpid();
 }
 
 static void init_tz()
