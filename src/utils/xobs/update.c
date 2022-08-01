@@ -39,7 +39,6 @@ static void showTime(void);
 static void showSunMoon(void);
 static void showScope(void);
 static void showHL(void);
-static void showDome(void);
 
 static char blank[] = " ";
 
@@ -56,7 +55,6 @@ void updateStatus(int force)
     int doslow = force || mjd > last_slow + SLOW_DT;
     int dofast = force || mjd > last_fast + FAST_DT;
     TelState ts = telstatshmp->telstate;
-    DShState ss = telstatshmp->shutterstate;
     int busy;
 
     /* always do these at least occasionally */
@@ -81,14 +79,6 @@ void updateStatus(int force)
         showSkyMap();
         if (busy)
             last_tbusy = mjd;
-    }
-
-    busy = ss == SH_OPENING || ss == SH_CLOSING;
-    if (doslow || busy || mjd < last_dbusy + COAST_DT)
-    {
-        showDome();
-        if (busy)
-            last_dbusy = mjd;
     }
 
     /* always be very responsive to the scope */
@@ -319,71 +309,3 @@ static void showHL()
     setLt(g_w[SLLT_W], ANY_LIMITING ? LTACTIVE : LTIDLE);
 }
 
-static void showDome()
-{
-    static int last_goshutter = -1;
-    LtState sol, scl;
-    int go;
-    int domealarm = telstatshmp->domealarm;
-
-    /* first check whether to allow operator access.
-     */
-    go = telstatshmp->shutterstate != SH_ABSENT && xobs_alone;
-    if (go != last_goshutter)
-    {
-        if (go)
-        {
-            XtSetSensitive(g_w[DOPEN_W], True);
-            XtSetSensitive(g_w[DCLOSE_W], True);
-        }
-        else
-        {
-            XtSetSensitive(g_w[DOPEN_W], False);
-            XtSetSensitive(g_w[DCLOSE_W], False);
-        }
-        last_goshutter = go;
-    }
-
-    switch (telstatshmp->shutterstate)
-    {
-    case SH_ABSENT:
-        sol = LTIDLE;
-        scl = LTIDLE;
-        break;
-    case SH_IDLE:
-        sol = LTIDLE;
-        scl = LTIDLE;
-        break;
-    case SH_OPENING:
-        sol = LTACTIVE;
-        scl = LTIDLE;
-        break;
-    case SH_CLOSING:
-        sol = LTIDLE;
-        scl = LTACTIVE;
-        break;
-    case SH_OPEN:
-        sol = LTOK;
-        scl = LTIDLE;
-        break;
-    case SH_CLOSED:
-        sol = LTIDLE;
-        scl = LTOK;
-        break;
-    default:
-        sol = LTIDLE;
-        scl = LTIDLE;
-        break;
-    }
-
-    if (domealarm)
-    {
-        if (sol != LTIDLE)
-            sol = LTWARN;
-        if (scl != LTIDLE)
-            scl = LTWARN;
-    }
-
-    setLt(g_w[DOLT_W], sol);
-    setLt(g_w[DCLT_W], scl);
-}

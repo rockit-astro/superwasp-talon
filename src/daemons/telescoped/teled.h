@@ -4,8 +4,7 @@
 typedef enum
 {
     Tel_Id,
-    Focus_Id,
-    Dome_Id
+    Focus_Id
 } FifoId;
 
 /* CSIMC info */
@@ -36,9 +35,6 @@ extern void csiiClose(MotorInfo *mip);
 extern int csiOpen(int addr);
 extern int csiClose(int addr);
 extern int csiIsReady(int fd);
-
-/* dome.c */
-extern void dome_msg(char *msg);
 
 /* fifoio.c */
 extern void fifoWrite(FifoId f, int code, char *fmt, ...);

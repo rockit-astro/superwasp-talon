@@ -6,7 +6,6 @@ typedef enum
 {
     Tel_Id = 0,
     Focus_Id,
-    Dome_Id,
     N_Id
 } FifoId;
 
@@ -33,10 +32,6 @@ extern void g_limit(Widget w, XtPointer client, XtPointer call);
 extern void g_focus(Widget w, XtPointer client, XtPointer call);
 extern void g_paddle(Widget w, XtPointer client, XtPointer call);
 extern void g_confirm(Widget w, XtPointer client, XtPointer call);
-
-/* dome.c */
-extern void domeOpenCB(Widget w, XtPointer client, XtPointer call);
-extern void domeCloseCB(Widget w, XtPointer client, XtPointer call);
 
 /* fifos.c */
 extern int fifoMsg(FifoId fid, char *fmt, ...);

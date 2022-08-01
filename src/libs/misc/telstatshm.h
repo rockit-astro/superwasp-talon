@@ -97,17 +97,6 @@ typedef enum
     TS_LIMITING  /* finding limit positions */
 } TelState;
 
-/* dome shutter states */
-typedef enum
-{
-    SH_ABSENT,  /* no shutter at all */
-    SH_IDLE,    /* shutter not moving -- position unknown */
-    SH_OPENING, /* shutter is opening */
-    SH_CLOSING, /* shutter is closing */
-    SH_OPEN,    /* shutter is open */
-    SH_CLOSED   /* shutter is closed */
-} DShState;
-
 typedef enum
 {
     H_DISABLED,
@@ -159,10 +148,6 @@ typedef struct
      * SuperWASP specific state is below
      */
 
-    DShState shutterstate; /* shutter state */
-    DHeartbeatState domeheartbeatstate;
-    int domeheartbeatremaining;
-    int domealarm;
 } TelStatShm;
 
 /* handy shortcuts that check things for being ready for normal observing */

@@ -35,12 +35,6 @@ typedef enum
     SLLT_W,
     SCLT_W,
 
-    /* dome and shutter */
-    DOLT_W,
-    DCLT_W,
-    DOPEN_W,
-    DCLOSE_W,
-
     /* telescope */
     TSERV_W,
     TSTOW_W,

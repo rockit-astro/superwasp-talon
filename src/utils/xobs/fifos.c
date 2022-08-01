@@ -31,7 +31,6 @@
 
 static void tel_rd_cb(XtPointer client, int *fdp, XtInputId *idp);
 static void focus_rd_cb(XtPointer client, int *fdp, XtInputId *idp);
-static void dome_rd_cb(XtPointer client, int *fdp, XtInputId *idp);
 
 /* this is used to describe the several FIFOs used to communicate with
  * the telescoped.
@@ -49,8 +48,7 @@ typedef struct
 /* list of fifos to the control daemons */
 static FifoInfo fifos[] = {
     {"Tel", Tel_Id, tel_rd_cb},
-    {"Focus", Focus_Id, focus_rd_cb},
-    {"Dome", Dome_Id, dome_rd_cb},
+    {"Focus", Focus_Id, focus_rd_cb}
 };
 
 #define NFIFOS XtNumber(fifos)
@@ -125,8 +123,6 @@ int fifoRead(FifoId fid, char buf[], int buflen)
 void stop_all_devices()
 {
     fifoMsg(Tel_Id, "Stop");
-    if (telstatshmp->shutterstate != SH_ABSENT)
-        fifoMsg(Dome_Id, "Stop");
     if (OMOT->have)
         fifoMsg(Focus_Id, "Stop");
 }
@@ -212,17 +208,3 @@ XtInputId *idp;                                             /* pointer to input 
     updateStatus(1);
 }
 
-/* called whenever we get input from the Dome fifo */
-/* ARGSUSED */
-static void dome_rd_cb(client, fdp, idp) XtPointer client; /* file name */
-int *fdp;                                                  /* pointer to file descriptor */
-XtInputId *idp;                                            /* pointer to input id */
-{
-    char buf[1024];
-    int rv;
-
-    rv = fifoRead(Dome_Id, buf, sizeof(buf));
-    msg("Dome: %s", buf);
-
-    updateStatus(1);
-}

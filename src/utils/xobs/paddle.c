@@ -46,7 +46,7 @@ static void closeCB(Widget w, XtPointer client, XtPointer call);
 static Widget paddle_w;                          /* the main shell */
 static Widget n_w, s_w, e_w, w_w;                /* the 4 direction buttons */
 static Widget nl_w, sl_w, el_w, wl_w;            /* the 4 direction button labels */
-static Widget roof_w, focus_w, coarse_w, fine_w; /* the 4 control buttons */
+static Widget focus_w, coarse_w, fine_w; /* the 4 control buttons */
 
 /* toggle the paddle */
 void pad_manage()
@@ -357,7 +357,6 @@ static Widget mkButtons(Widget p_w)
         {"C", "Coarse scope", 10, &coarse_w, "Coarse telescope control"},
         {"D", "Fine scope", 30, &fine_w, "Fine telescope control"},
         {"B", "Focus", 50, &focus_w, "Focus control"},
-        {"A", "Roof/Dome", 70, &roof_w, "Roof and Dome control"},
     };
 
     Widget f_w;
@@ -428,17 +427,6 @@ static void armArrow(Widget w)
         if (w == w_w)
             fifoMsg(Tel_Id, "jw");
     }
-    if (XmToggleButtonGetState(roof_w))
-    {
-        if (w == n_w)
-            fifoMsg(Dome_Id, "Open");
-        if (w == s_w)
-            fifoMsg(Dome_Id, "Close");
-        if (w == e_w)
-            fifoMsg(Dome_Id, "j+");
-        if (w == w_w)
-            fifoMsg(Dome_Id, "j-");
-    }
 }
 
 static void disarmArrow(Widget w)
@@ -452,11 +440,6 @@ static void disarmArrow(Widget w)
         fifoMsg(Tel_Id, "j0");
     if (XmToggleButtonGetState(fine_w))
         fifoMsg(Tel_Id, "j0");
-    if (XmToggleButtonGetState(roof_w))
-    {
-        if (w == e_w || w == w_w)
-            fifoMsg(Dome_Id, "j0");
-    }
 }
 
 /* called when an arrow button is armed */
@@ -484,8 +467,6 @@ static void buttonCB(Widget w, XtPointer client, XtPointer call)
         return;
 
     /* implement radio box behavior */
-    if (w != roof_w)
-        XmToggleButtonSetState(roof_w, False, True);
     if (w != focus_w)
         XmToggleButtonSetState(focus_w, False, True);
     if (w != coarse_w)
@@ -523,21 +504,6 @@ static void buttonCB(Widget w, XtPointer client, XtPointer call)
         if (w == coarse_w && telstatshmp->telstate != TS_SLEWING)
         stop_all_devices();
          */
-    }
-
-    if (w == roof_w)
-    {
-        have = telstatshmp->shutterstate != SH_ABSENT;
-        wlprintf(nl_w, "Open");
-        wlprintf(sl_w, "Close");
-        XtSetSensitive(n_w, have);
-        XtSetSensitive(s_w, have);
-
-        have = 0;
-        wlprintf(el_w, "   ");
-        wlprintf(wl_w, "   ");
-        XtSetSensitive(e_w, have);
-        XtSetSensitive(w_w, have);
     }
 
     if (w == focus_w)

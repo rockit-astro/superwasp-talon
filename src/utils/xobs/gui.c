@@ -93,7 +93,6 @@ static int msg_txtl;
 #define LIGHTH 10 /* height of light indicator */
 
 static Widget mkCurrent(Widget main_w);
-static Widget mkDome(Widget main_w);
 static Widget mkControl(Widget main_w);
 static Widget mkStatus(Widget main_w);
 static Widget mkScope(Widget main_w);
@@ -119,7 +118,6 @@ void mkGUI()
     Widget skymap_w;
     Widget ctrl_w;
     Widget status_w;
-    Widget dome_w;
     Widget scope_w;
     Widget msgf_w;
     Widget info_w;
@@ -155,14 +153,10 @@ void mkGUI()
     XtVaSetValues(scope_w, XmNtopAttachment, XmATTACH_FORM, XmNbottomAttachment, XmATTACH_FORM, XmNrightAttachment,
                   XmATTACH_FORM, NULL);
 
-    dome_w = mkDome(hf_w);
-    XtVaSetValues(dome_w, XmNtopAttachment, XmATTACH_FORM, XmNbottomAttachment, XmATTACH_FORM, XmNrightAttachment,
-                  XmATTACH_WIDGET, XmNrightWidget, scope_w, XmNrightOffset, 10, NULL);
-
     status_w = mkStatus(hf_w);
     XtVaSetValues(status_w, XmNtopAttachment, XmATTACH_FORM, XmNbottomAttachment, XmATTACH_FORM, XmNleftAttachment,
                   XmATTACH_WIDGET, XmNleftWidget, ctrl_w, XmNleftOffset, 10, XmNrightAttachment, XmATTACH_WIDGET,
-                  XmNrightWidget, dome_w, XmNrightOffset, 10, NULL);
+                  XmNrightWidget, scope_w, XmNrightOffset, 10, NULL);
 
     info_w = mkInfo(main_w);
     XtVaSetValues(info_w, XmNtopAttachment, XmATTACH_WIDGET, XmNtopWidget, hf_w, XmNleftAttachment, XmATTACH_FORM,
@@ -303,7 +297,6 @@ void guiSensitive(int whether)
     if (!xobs_alone)
         XtSetSensitive(g_w[CSTOP_W], 0);
 
-    /* dome sensitivity is left up to updateStatus() */
 }
 
 static Widget mkCurrent(Widget main_w)
@@ -381,42 +374,6 @@ static Widget mkCurrent(Widget main_w)
     g_w[PDHA_W] = l_w[3];
     g_w[PDALT_W] = l_w[4];
     g_w[PDAZ_W] = l_w[5];
-
-    return (fr_w);
-}
-
-static Widget mkDome(Widget main_w)
-{
-    Widget fr_w, f_w;
-    Widget lf_w;
-    Widget tbl_w;
-    Widget l_w, tf_w;
-    Widget w;
-
-    mkFrame(main_w, "Roof", "Roof", &fr_w, &f_w);
-
-    tbl_w = XtVaCreateManagedWidget("DRC", xmRowColumnWidgetClass, f_w, XmNtopAttachment, XmATTACH_FORM,
-                                    XmNbottomAttachment, XmATTACH_FORM, XmNleftAttachment, XmATTACH_FORM,
-                                    XmNrightAttachment, XmATTACH_FORM, XmNisAligned, False, XmNadjustMargin, False,
-                                    XmNpacking, XmPACK_TIGHT, XmNspacing, 2, NULL);
-
-    lf_w = XtVaCreateManagedWidget("DOF", xmFormWidgetClass, tbl_w, NULL);
-    g_w[DOLT_W] = mkLight(lf_w);
-    mkRow(lf_w, &g_w[DOLT_W], 1, 1);
-    w = XtVaCreateManagedWidget("O", xmPushButtonWidgetClass, tbl_w, NULL);
-    wltprintf(pbT, w, "Open");
-    XtAddCallback(w, XmNactivateCallback, domeOpenCB, NULL);
-    g_w[DOPEN_W] = w;
-    wtip(w, "Open the dome shutter (or roof)");
-
-    w = XtVaCreateManagedWidget("C", xmPushButtonWidgetClass, tbl_w, NULL);
-    wltprintf(pbT, w, "Close");
-    XtAddCallback(w, XmNactivateCallback, domeCloseCB, NULL);
-    g_w[DCLOSE_W] = w;
-    wtip(w, "Close the dome shutter (or roof)");
-    lf_w = XtVaCreateManagedWidget("DCF", xmFormWidgetClass, tbl_w, NULL);
-    g_w[DCLT_W] = mkLight(lf_w);
-    mkRow(lf_w, &g_w[DCLT_W], 1, 1);
 
     return (fr_w);
 }
